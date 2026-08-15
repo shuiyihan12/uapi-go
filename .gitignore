@@ -1,0 +1,51 @@
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Local IDE / agent settings
+.idea/
+.vscode/
+.claude/
+.zcode/
+
+# Go build artifacts
+bin/
+main
+release/
+# 仅忽略仓库根目录编译产物；保留 tools/airxsdgen/ 生成器源码
+/airxsdgen
+/healthcheck
+
+# Go compiled object / binary files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go dependency / tooling caches
+/vendor/
+go.work
+go.work.sum
+.golangci.yml
+
+# Python caches (scripts)
+scripts/__pycache__/
+*.pyc
+
+# Go test / coverage artifacts
+coverage.out
+.cache/
+
+# Logs / temp
+*.log
+tmp/
+
+# Git history backup (local only, never commit)
+.git-backup*/

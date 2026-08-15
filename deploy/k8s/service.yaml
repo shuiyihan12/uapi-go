@@ -1,0 +1,18 @@
+# UAPI gateway Service: the in-cluster access entry point.
+# Business APIs (/api/*) and ops endpoints (/health /ready /stats /metrics)
+# share one port; to restrict /metrics to in-cluster visibility only, split
+# by path via Ingress routing rules.
+apiVersion: v1
+kind: Service
+metadata:
+  name: uapi-go
+  labels:
+    app.kubernetes.io/name: uapi-go
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: uapi-go
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

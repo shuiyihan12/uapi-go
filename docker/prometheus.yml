@@ -1,0 +1,13 @@
+# Prometheus scrape config: the gateway exposes /metrics on the business
+# port (default 8080), with metrics prefixed uapi_* (requests_total /
+# request_duration_seconds / active_requests, etc.).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: uapi-go
+    static_configs:
+      - targets: ["uapi-go:8080"]
+        labels:
+          service: uapi-go

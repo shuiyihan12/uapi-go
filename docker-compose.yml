@@ -1,0 +1,71 @@
+# Local development / single-host deployment orchestration.
+#
+#   docker compose up -d --build                 # start uapi-go
+#   docker compose --profile monitoring up -d    # add Prometheus scraping
+#   docker compose logs -f uapi-go
+#
+# Configuration comes from .env in the repo root (copy it from
+# .env.example). The gateway holds no Travelport credentials: auth is passed
+# through per business request via the Authorization header; the
+# container-level health check only probes the process self-check (/ready).
+services:
+  uapi-go:
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+        # For networks that cannot reach gcr.io, point UAPI_RUNTIME_IMAGE at
+        # a trusted mirror, e.g.:
+        #   UAPI_RUNTIME_IMAGE=<mirror>/distroless/static-debian12:nonroot docker compose up -d --build
+        # or pull on a reachable network and retag:
+        #   docker tag <pulled> gcr.io/distroless/static-debian12:nonroot
+        RUNTIME_IMAGE: ${UAPI_RUNTIME_IMAGE:-gcr.io/distroless/static-debian12:nonroot}
+    image: shuiyihan/uapi-go:${VERSION:-dev}
+    container_name: uapi-go
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    # Runtime parameters come from environment variables (the daemon supports
+    # the UAPI_* family; see README §6).
+    environment:
+      UAPI_ENV: ${UAPI_ENV:-test}
+      # Only for private environments (self-signed certificates); keep this
+      # commented out in production.
+      # UAPI_SKIP_TLS_VERIFY: "1"
+      UAPI_ENDPOINT: ${UAPI_ENDPOINT:-https://apac.universal-api.travelport.com/B2BGateway/connect/uAPI}
+    env_file:
+      - path: .env
+        required: false
+    # Non-root user (matching the image's nonroot), read-only root
+    # filesystem, tightened kernel capabilities.
+    user: "65532:65532"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 512M
+
+  # Optional monitoring stack: docker compose --profile monitoring up -d
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: uapi-prometheus
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - uapi-go
+
+volumes:
+  prom-data:

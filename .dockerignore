@@ -1,0 +1,36 @@
+# 版本库与本地缓存（.cache 有百余 MB 生成器中间产物，绝不进构建上下文）
+.git
+.gitignore
+.cache
+.claude
+.idea
+.vscode
+
+# 构建产物
+bin
+release
+*.exe
+*.test
+coverage.out
+
+# 源码树中与镜像构建无关的部分（镜像只编译 cmd/internal/pkg）
+wsdl
+docs
+test
+tools
+scripts
+
+# 本地环境与文档
+.env
+.env.*
+!.env.example
+CONTRIBUTING.md
+README.md
+AGENTS.md
+LICENSE
+NOTICE
+docker
+deploy
+*.log
+tmp
+.DS_Store

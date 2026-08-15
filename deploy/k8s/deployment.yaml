@@ -1,0 +1,82 @@
+# UAPI gateway Deployment.
+#
+# Probe design (aligned with the project's health semantics, see
+# docs/architecture.md §5.6):
+#   - livenessProbe  -> /ready (process self-check, httpGet): restarts only
+#     when the process is wedged; upstream flaps never kill the pod.
+#   - readinessProbe -> /health (exec probe): carries the Secret-injected
+#     Authorization and issues a real upstream SystemPing; when the upstream
+#     is unreachable the pod is removed from endpoints (not restarted).
+#     Note: k8s httpGet headers cannot reference Secrets via valueFrom, so
+#     this uses exec + environment variables; the probe process inherits the
+#     container env (HEALTHCHECK_PATH / HEALTHCHECK_AUTHORIZATION).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uapi-go
+  labels:
+    app.kubernetes.io/name: uapi-go
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uapi-go
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: uapi-go
+    spec:
+      securityContext:
+        runAsNonRoot: true        # the image runs as uid 65532 (distroless nonroot)
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: uapi-go
+          image: docker.io/shuiyihan/uapi-go:latest   # pin to a tag/sha in production
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: UAPI_ENV
+              value: "production"
+            # The readinessProbe's /healthcheck reads the two variables
+            # below: the probe path switches to /health (a real SystemPing)
+            # with credentials injected from the Secret (see
+            # secret.example.yaml).
+            - name: HEALTHCHECK_PATH
+              value: "/health"
+            - name: HEALTHCHECK_AUTHORIZATION
+              valueFrom:
+                secretKeyRef:
+                  name: uapi-go-health
+                  key: authorization
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["/healthcheck"]
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 2
+      terminationGracePeriodSeconds: 30

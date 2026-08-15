@@ -1,0 +1,30 @@
+uapi-go
+Copyright 2026 The uapi-go Authors
+
+This product includes software developed by The uapi-go Authors
+(https://github.com/uapi-go/uapi-go), licensed under the Apache License,
+Version 2.0.
+
+==============================================================================
+Third-party notices
+==============================================================================
+
+This project depends on the following open-source components:
+
+- go.uber.org/zap — MIT License
+- github.com/prometheus/client_golang — Apache License 2.0
+- golang.org/x/net, golang.org/x/text, golang.org/x/sys — BSD 3-Clause
+  License
+
+==============================================================================
+Upstream artifacts (not covered by this project's license)
+==============================================================================
+
+The wsdl/ directory contains Travelport Universal API WSDL/XSD contract
+artifacts. These files are copyrighted by Travelport and are archived here
+solely for build-time code generation in accordance with Travelport's
+developer program terms. They are NOT distributed under the Apache License
+and remain subject to Travelport's terms of use.
+
+"Travelport" and product names are trademarks of Travelport; this project
+is not affiliated with or endorsed by Travelport.
