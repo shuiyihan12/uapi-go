@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	systemxsd "github.com/shuiyihan12/uapi-go/pkg/generated/system"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/services/air"
 	"github.com/shuiyihan12/uapi-go/pkg/services/gdsQueue"
 	"github.com/shuiyihan12/uapi-go/pkg/services/hotel"
@@ -88,6 +88,9 @@ type ServiceConfig struct {
 	// UAPI_MAX_IDLE_CONNS_PER_HOST.
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
+	// Metrics is the optional per-call observability hook forwarded to the
+	// SOAP transport (client.Metrics); nil disables instrumentation.
+	Metrics client.Metrics
 
 	// Logging configuration.
 	LogLevel      string
@@ -250,6 +253,7 @@ func (m *ServiceManager) createSOAPConfig(serviceName string) (client.SOAPConfig
 		ReadTimeout:         m.config.ReadTimeout,
 		MaxIdleConns:        m.config.MaxIdleConns,
 		MaxIdleConnsPerHost: m.config.MaxIdleConnsPerHost,
+		Metrics:             m.config.Metrics,
 		SkipTLSVerify:       m.config.SkipTLSVerify,
 	}, nil
 }

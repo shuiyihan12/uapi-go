@@ -162,6 +162,11 @@ type SOAPConfig struct {
 	// MaxIdleConnsPerHost caps idle keep-alive connections per host; it
 	// cannot exceed MaxIdleConns. Zero means the default (100).
 	MaxIdleConnsPerHost int
+	// Metrics is the optional observability hook for SOAP calls; nil means
+	// calls are not instrumented. It rides on SOAPConfig (rather than a
+	// constructor argument) so the manager and the SDK surface can inject
+	// it without touching any service constructor signature.
+	Metrics Metrics
 	// SkipTLSVerify defaults to false (verify certificates). Only enabled
 	// explicitly via UAPI_SKIP_TLS_VERIFY=1 for private environments with
 	// self-signed certificates; never implicitly tied to Environment.

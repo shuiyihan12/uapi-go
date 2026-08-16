@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/shuiyihan12/uapi-go/pkg/logging"
-	"github.com/shuiyihan12/uapi-go/internal/metrics"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
 	"go.uber.org/zap"
 )
@@ -22,7 +21,7 @@ import (
 type EnterpriseSOAPClient struct {
 	*SOAPClient
 	logger  logging.Logger
-	metrics *metrics.Metrics
+	metrics Metrics
 	service string
 }
 
@@ -48,7 +47,10 @@ func NewEnterpriseSOAPClient(config EnterpriseConfig) (*EnterpriseSOAPClient, er
 		return nil, err
 	}
 
-	m := metrics.GetMetrics()
+	m := config.SOAPConfig.Metrics
+	if m == nil {
+		m = noopMetrics{}
+	}
 
 	return &EnterpriseSOAPClient{
 		SOAPClient: soapClient,

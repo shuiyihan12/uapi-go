@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/shuiyihan12/uapi-go/internal/metrics"
 	"github.com/shuiyihan12/uapi-go/pkg/api"
 	"github.com/shuiyihan12/uapi-go/pkg/manager"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
@@ -56,11 +57,14 @@ func main() {
 	config.Environment = *environment
 	config.LogLevel = "info"
 	config.IsDevelopment = *environment != "production"
-	config.ConnectionTimeout = envDurationMS("UAPI_CONNECTION_TIMEOUT", config.ConnectionTimeout)   // connect timeout (ms): max time to establish the TCP/TLS connection
-	config.ReadTimeout = envDurationMS("UAPI_READ_TIMEOUT", config.ReadTimeout)                     // response-header timeout (ms): max wait for the GDS to start responding after connecting
-	config.RequestTimeout = envDurationMS("UAPI_REQUEST_TIMEOUT", config.RequestTimeout)            // per-request total timeout (ms): hard cap over connect+send+read+transfer
-	config.MaxIdleConns = envInt("UAPI_MAX_IDLE_CONNS", config.MaxIdleConns)                        // warm keep-alive pool across all upstream hosts
-	config.MaxIdleConnsPerHost = envInt("UAPI_MAX_IDLE_CONNS_PER_HOST", config.MaxIdleConnsPerHost) // warm keep-alive pool per GDS host (capped by the global pool)
+	config.ConnectionTimeout = envDurationMS("UAPI_CONNECTION_TIMEOUT", config.ConnectionTimeout) // connect timeout (ms): max time to establish the TCP/TLS connection
+	config.ReadTimeout = envDurationMS("UAPI_READ_TIMEOUT", config.ReadTimeout)                   // response-header timeout (ms): max wait for the GDS to start responding after connecting
+	config.RequestTimeout = envDurationMS("UAPI_REQUEST_TIMEOUT", config.RequestTimeout)          // per-request total timeout (ms): hard cap over connect+send+read+transfer
+	config.MaxIdleConns = envInt("UAPI_MAX_IDLE_CONNS", config.MaxIdleConns)                      // warm keep-alive pool across all upstream hosts
+	config.MaxIdleConnsPerHost = envInt("UAPI_MAX_IDLE_CONNS_PER_HOST", config.MaxIdleConnsPerHost)
+	// Instrument SOAP calls with the daemon's Prometheus collector; SDK
+	// consumers default to the no-op implementation.
+	config.Metrics = metrics.GetMetrics() // warm keep-alive pool per GDS host (capped by the global pool)
 	// TLS certificate verification is on by default; only private
 	// environments (self-signed certificates) explicitly skip it via
 	// UAPI_SKIP_TLS_VERIFY=1.
