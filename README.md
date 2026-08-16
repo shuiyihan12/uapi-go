@@ -106,6 +106,7 @@ hotel, err := c.Hotel() // typed service per domain; lazy and cached
 
 - Credentials stay request-level, mirroring the gateway: pass the Travelport `Authorization` value and region per call via `pkg/requestctx` (see `sdk/example_test.go` for the full flow).
 - The SDK shares the gateway's tag — the module version and the container image version are always the same `v0.WSDL.PATCH`.
+- Runnable examples live under [`examples/`](./examples/): `ping` (hello world — verifies credentials and connectivity) and `hotel-search` (a full typed request/response flow). Set `UAPI_EXAMPLE_AUTHORIZATION` and `go run ./examples/ping`.
 - The project is on major version 0: pin the exact version and check the changelog before upgrading.
 
 ---

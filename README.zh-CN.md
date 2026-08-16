@@ -106,6 +106,7 @@ hotel, err := c.Hotel() // 每个域一个强类型服务；懒加载、带缓�
 
 - 凭据保持请求级，与网关一致：每次调用经 `pkg/requestctx` 传入 Travelport `Authorization` 与区域（完整流程见 `sdk/example_test.go`）。
 - SDK 与网关共用同一 tag——module 版本与容器镜像版本永远是同一个 `v0.WSDL.PATCH`。
+- 可运行示例见 [`examples/`](./examples/)：`ping`（hello world——验证凭据与连通性）、`hotel-search`（完整的强类型请求/响应流程）。设置 `UAPI_EXAMPLE_AUTHORIZATION` 后 `go run ./examples/ping`。
 - 项目处于 major 0 阶段：请显式锁定版本，升级前查阅 changelog。
 
 ---
