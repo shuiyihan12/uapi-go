@@ -7,7 +7,6 @@ name: Docker
 # Major is pinned at 0, so no `/vN` module path suffix is required.
 on:
   push:
-    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -36,23 +35,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Tags:
-      #   - main -> latest + <sha>
-      #   - v*.* -> latest + <sha> + <tag> (e.g. v0.55.1)
+      # Tags (only on version tags, e.g. v0.55.2):
+      #   - latest  (rolling pointer to the latest release)
+      #   - <tag>   (e.g. v0.55.2)
+      # No per-commit hash tags, no builds from main.
       # NOTE: build-push-action expects the tag list newline/comma separated,
       # not space separated (space makes it one invalid reference).
       - name: Compute image tags
         id: tags
         shell: bash
         run: |
-          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}"
-          tags=("${REPO}:latest" "${REPO}:${GITHUB_SHA::8}")
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            tags+=("${REPO}:${GITHUB_REF_NAME}")
+          if [[ "${GITHUB_REF}" != refs/tags/v* ]]; then
+            echo "::error::This workflow only builds on version tags (v*). Got ref: ${GITHUB_REF}"
+            exit 1
           fi
+          REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}"
           {
             echo "tags<<EOF"
-            printf "%s\n" "${tags[@]}"
+            printf "%s\n" "${REPO}:latest" "${REPO}:${GITHUB_REF_NAME}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 

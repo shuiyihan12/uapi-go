@@ -49,3 +49,7 @@ tmp/
 
 # Git history backup (local only, never commit)
 .git-backup*/
+
+# Example binaries (go build output at repo root)
+/ping
+/hotel-search

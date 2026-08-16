@@ -11,6 +11,25 @@
 
 ---
 
+## v0.55.2 (2026-08-16)
+
+First release with the **Go SDK surface**: the module is now cleanly importable as a library alongside the containerized gateway, under the same tag.
+
+### Added
+
+- **`sdk` package** — the unified library entry: `sdk.New(...)` with functional options (`WithEndpoint`, `WithEnvironment`, `WithTimeouts`, `WithKeepAlivePool`, `WithLogger`, `WithLogLevel`, `WithMetrics`, `WithTLSSkipVerify`) returning a `*sdk.Client` with lazy, cached accessors for all 12 domain services plus `Close()`.
+- **Runnable examples** under `examples/`: `ping` (hello world — verifies credentials and connectivity) and `hotel-search` (a full typed request/response flow). Credentials come from `UAPI_EXAMPLE_*` env vars, never hardcoded.
+- **`pkg/logging`** (promoted from `internal/`) with `Noop()` and a standard-library adapter, so SDK consumers can plug in or silence logging; service constructor `Logger` parameters are now publicly referenceable.
+- **`client.Metrics`** interface carried on `SOAPConfig` (no-op by default; the daemon injects its Prometheus collector) — the library import graph no longer forces Prometheus.
+- README "As a Go SDK" sections (English / 简体中文).
+
+### Changed
+
+- CI: an `sdk-import` smoke job builds an external consumer module that constructs **all 12 domain services** and references generated types, so any exported-signature break fails CI; `actions/checkout` unified to v5.
+- Version discipline clarified: patch releases carry backward-compatible fixes **and additions**; breaking changes always ride the WSDL minor.
+
+---
+
 ## v0.55.1 (2026-08)
 
 Upstream contract **v54_0 → v55_0 major upgrade** plus three accompanying refactors. **This version breaks compatibility with the old one**; callers must follow the migration notes below.

@@ -11,6 +11,25 @@
 
 ---
 
+## v0.55.2（2026-08-16）
+
+首个包含 **Go SDK 表面**的版本：module 在容器化网关之外，可被干净地作为库 import，共用同一 tag。
+
+### 新增
+
+- **`sdk` 包**——统一的库入口：`sdk.New(...)` 函数式选项（`WithEndpoint`、`WithEnvironment`、`WithTimeouts`、`WithKeepAlivePool`、`WithLogger`、`WithLogLevel`、`WithMetrics`、`WithTLSSkipVerify`）返回 `*sdk.Client`，提供全部 12 个域服务的懒加载缓存访问器与 `Close()`。
+- **可运行示例** `examples/`：`ping`（hello world——验证凭据与连通性）、`hotel-search`（完整强类型请求/响应流程）。凭据经 `UAPI_EXAMPLE_*` 环境变量读取，绝不硬编码。
+- **`pkg/logging`**（由 internal/ 提升）：新增 `Noop()` 与标准库适配器，SDK 用户可注入或静默日志；各服务构造函数的 `Logger` 参数类型对外可引用。
+- **`client.Metrics`** 接口随 `SOAPConfig` 传递（默认 no-op；daemon 注入 Prometheus 实现）——库的 import 依赖图不再强制携带 Prometheus。
+- README 新增 "As a Go SDK" 小节（英文 / 简体中文）。
+
+### 变更
+
+- CI 新增 `sdk-import` 冒烟 job：外部消费方 module 构造全部 12 个域服务并引用生成类型，任何导出签名破坏都会使 CI 失败；`actions/checkout` 统一为 v5。
+- 版本纪律澄清：补丁版本包含向后兼容的修复**与新增**；破坏性变更一律随 WSDL 位（minor）发布。
+
+---
+
 ## v0.55.1（2026-08）
 
 上游契约 **v54_0 → v55_0 主版本升级** + 三项配套重构。**本版本不兼容旧版**，调用方必须按下方迁移说明改造。
