@@ -82,6 +82,34 @@ flowchart TD
 
 ---
 
+### 作为 Go SDK（库）引入
+
+同一个 module 同时是可 import 的 Go SDK——无需维护独立的发布产物：
+
+```bash
+go get github.com/shuiyihan12/uapi-go@v0.55.1
+```
+
+```go
+import (
+    "github.com/shuiyihan12/uapi-go/pkg/logging"
+    "github.com/shuiyihan12/uapi-go/sdk"
+)
+
+c, err := sdk.New(
+    sdk.WithEndpoint("https://apac.universal-api.travelport.com/B2BGateway/connect/uAPI"),
+    sdk.WithLogger(logging.Noop()), // 或经 pkg/logging 注入你自己的日志
+)
+// ...
+hotel, err := c.Hotel() // 每个域一个强类型服务；懒加载、带缓存
+```
+
+- 凭据保持请求级，与网关一致：每次调用经 `pkg/requestctx` 传入 Travelport `Authorization` 与区域（完整流程见 `sdk/example_test.go`）。
+- SDK 与网关共用同一 tag——module 版本与容器镜像版本永远是同一个 `v0.WSDL.PATCH`。
+- 项目处于 major 0 阶段：请显式锁定版本，升级前查阅 changelog。
+
+---
+
 ## 5. 初始化、构建与测试
 
 ```bash

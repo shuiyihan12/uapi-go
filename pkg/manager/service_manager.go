@@ -92,7 +92,10 @@ type ServiceConfig struct {
 	// SOAP transport (client.Metrics); nil disables instrumentation.
 	Metrics client.Metrics
 
-	// Logging configuration.
+	// Logging configuration. Logger optionally injects a ready-made logger
+	// (pkg/logging) used by the manager and every service it creates; when
+	// nil, one is built from LogLevel/IsDevelopment.
+	Logger        logging.Logger
 	LogLevel      string
 	IsDevelopment bool
 
@@ -122,9 +125,13 @@ func DefaultServiceConfig() ServiceConfig {
 // NewServiceManager builds a ServiceManager from the given configuration,
 // initializing the logger and resolving the endpoint.
 func NewServiceManager(config ServiceConfig) (*ServiceManager, error) {
-	logger, err := logging.NewLogger(config.LogLevel, config.IsDevelopment)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create logger: %v", err)
+	logger := config.Logger
+	if logger == nil {
+		var err error
+		logger, err = logging.NewLogger(config.LogLevel, config.IsDevelopment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create logger: %v", err)
+		}
 	}
 
 	// In production without an explicit endpoint, fall back to the apac

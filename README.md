@@ -82,6 +82,34 @@ Full architecture, layer responsibilities, call chains, code-generation strategy
 
 ---
 
+### As a Go SDK (library)
+
+The same module doubles as an importable Go SDK — no separate artifact to maintain:
+
+```bash
+go get github.com/shuiyihan12/uapi-go@v0.55.1
+```
+
+```go
+import (
+    "github.com/shuiyihan12/uapi-go/pkg/logging"
+    "github.com/shuiyihan12/uapi-go/sdk"
+)
+
+c, err := sdk.New(
+    sdk.WithEndpoint("https://apac.universal-api.travelport.com/B2BGateway/connect/uAPI"),
+    sdk.WithLogger(logging.Noop()), // or plug your own via pkg/logging
+)
+// ...
+hotel, err := c.Hotel() // typed service per domain; lazy and cached
+```
+
+- Credentials stay request-level, mirroring the gateway: pass the Travelport `Authorization` value and region per call via `pkg/requestctx` (see `sdk/example_test.go` for the full flow).
+- The SDK shares the gateway's tag — the module version and the container image version are always the same `v0.WSDL.PATCH`.
+- The project is on major version 0: pin the exact version and check the changelog before upgrading.
+
+---
+
 ## 5. Setup, build and test
 
 ```bash
