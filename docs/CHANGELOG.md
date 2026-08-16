@@ -4,14 +4,14 @@
 
 ## Versioning scheme
 
-- **Major versions increase by date**, Ubuntu-style CalVer with no leading zero (so it stays SemVer-compatible): format `vYY.M`, e.g. `v26.8` = released 2026-08.
+- **Module major version is pinned at `0`** (Go only requires a `/vN` module path suffix when major ≥ 2, so the bare import path `github.com/shuiyihan12/uapi-go` stays valid). Tag format is `v0.WSDL.PATCH`, where `WSDL` is the Travelport WSDL contract version (the `wsdl/` folder suffix, e.g. `55` for the v55_0 contract) and `PATCH` is our own fix increment — e.g. `v0.55.1` = released 2026-08.
 - **Only a git tag counts as a release**; untagged commits are development state (the daemon shows `dev`).
-- **Patch versions** append `.N` to the major version: e.g. `v26.8.1`, used only to fix anomalies in `v26.8`, with no new features.
+- **Patch versions** increment the `PATCH` segment: e.g. `v0.55.2` fixes anomalies in `v0.55.1`, with no new features.
 - The version is injected via `-ldflags "-X main.version=..."`; visible via `uapi-go-daemon --version` and in startup logs.
 
 ---
 
-## v26.8 (2026-08)
+## v0.55.1 (2026-08)
 
 Upstream contract **v54_0 → v55_0 major upgrade** plus three accompanying refactors. **This version breaks compatibility with the old one**; callers must follow the migration notes below.
 

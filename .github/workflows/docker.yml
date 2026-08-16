@@ -2,8 +2,9 @@ name: Docker
 
 # Build the multi-stage image and push it to Docker Hub.
 # Requires repo secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN.
-# Version tags follow the Ubuntu-style CalVer scheme documented in
-# docs/CHANGELOG.md: `vYY.M` (e.g. v26.8, no leading zero) and patch `vYY.M.N` (v26.8.1).
+# Version tags use the `v0.WSDL.PATCH` scheme documented in docs/CHANGELOG.md
+# (WSDL = Travelport contract version, PATCH = our own fix number), e.g. `v0.55.1`.
+# Major is pinned at 0, so no `/vN` module path suffix is required.
 on:
   push:
     branches: [main]
@@ -37,7 +38,7 @@ jobs:
 
       # Tags:
       #   - main -> latest + <sha>
-      #   - v*.* -> latest + <sha> + <tag> (e.g. v26.8)
+      #   - v*.* -> latest + <sha> + <tag> (e.g. v0.55.1)
       # NOTE: build-push-action expects the tag list newline/comma separated,
       # not space separated (space makes it one invalid reference).
       - name: Compute image tags

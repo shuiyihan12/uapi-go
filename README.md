@@ -63,7 +63,7 @@ flowchart TD
 
 Design principle: **each layer knows only its own little slice**; `pkg/api → pkg/usecase → pkg/services → pkg/client` is a one-way dependency. Adding an upstream operation concentrates changes in "register route + facade method + SOAP payload assembly" — the HTTP protocol and transport layers stay untouched.
 
-Full architecture, layer responsibilities, call chains, code-generation strategy and import constraints: [`docs/architecture.md`](./docs/architecture.md). For version history and breaking-change migration notes see [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) (versioning scheme: date-increasing `vYY.M.D`; tagging a release requires a tag; patch bumps add `.N`).
+Full architecture, layer responsibilities, call chains, code-generation strategy and import constraints: [`docs/architecture.md`](./docs/architecture.md). For version history and breaking-change migration notes see [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) (versioning scheme: `v0.WSDL.PATCH` where WSDL is the Travelport contract version, e.g. `v0.55.1`; tagging a release requires a tag; patch bumps increment the last segment).
 
 ---
 
@@ -171,12 +171,12 @@ The project ships production-grade container tooling: a multi-stage [`Dockerfile
 ```bash
 # Build (VERSION is baked into the binary and visible in startup logs; buildx multi-arch supported;
 # versioning scheme in docs/CHANGELOG.md)
-docker build -t shuiyihan/uapi-go:v26.8 --build-arg VERSION=v26.8 .
+docker build -t shuiyihan/uapi-go:v0.55.1 --build-arg VERSION=v0.55.1 .
 
 # Run (configuration via UAPI_* env vars; credentials still travel per business request header,
 # never baked into the container)
 docker run -d --name uapi-go -p 8080:8080 \
-  -e UAPI_ENV=production shuiyihan/uapi-go:v26.8
+  -e UAPI_ENV=production shuiyihan/uapi-go:v0.55.1
 
 # Or one-shot with docker compose (optional --profile monitoring adds Prometheus)
 docker compose up -d --build

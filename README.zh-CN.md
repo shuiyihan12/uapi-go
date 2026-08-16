@@ -63,7 +63,7 @@ flowchart TD
 
 设计原则：**每一层只懂自己那一小段**，`pkg/api → pkg/usecase → pkg/services → pkg/client` 单向依赖。新增一个上游操作，改动集中在「注册路由 + Facade 方法 + SOAP 报文组装」，HTTP 协议与传输层不动。
 
-完整架构、分层职责、调用链路、代码生成策略与 import 约束，见 [`docs/architecture.md`](./docs/architecture.zh-CN.md)；各版本变更与破坏性迁移说明见 [`docs/CHANGELOG.md`](./docs/CHANGELOG.zh-CN.md)（版本规范：日期递增 `vYY.M.D`，仅打 tag 视为发版，补丁号 `.N`）。
+完整架构、分层职责、调用链路、代码生成策略与 import 约束，见 [`docs/architecture.md`](./docs/architecture.zh-CN.md)；各版本变更与破坏性迁移说明见 [`docs/CHANGELOG.md`](./docs/CHANGELOG.zh-CN.md)（版本规范：`v0.WSDL.PATCH`，WSDL 为 Travelport 契约版本号，如 `v0.55.1`；仅打 tag 视为发版，补丁号递增末段）。
 
 ---
 
@@ -170,11 +170,11 @@ curl -X POST http://localhost:8080/api/air/low-fare-search \
 
 ```bash
 # 构建（VERSION 会注入二进制，启动日志可见；支持 buildx 多架构；版本规范见 docs/CHANGELOG.md）
-docker build -t shuiyihan/uapi-go:v26.8 --build-arg VERSION=v26.8 .
+docker build -t shuiyihan/uapi-go:v0.55.1 --build-arg VERSION=v0.55.1 .
 
 # 运行（配置经 UAPI_* 环境变量传入；凭据仍由业务请求头逐个透传，不入容器）
 docker run -d --name uapi-go -p 8080:8080 \
-  -e UAPI_ENV=production shuiyihan/uapi-go:v26.8
+  -e UAPI_ENV=production shuiyihan/uapi-go:v0.55.1
 
 # 或 docker compose 一键起（可选 --profile monitoring 附带 Prometheus）
 docker compose up -d --build

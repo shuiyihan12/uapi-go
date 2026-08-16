@@ -27,7 +27,7 @@ Steps to reproduce the behavior:
 
 **Environment**
 
-- Gateway version: <!-- e.g. v26.8.14; shown in startup logs -->
+- Gateway version: <!-- e.g. v0.55.1; shown in startup logs -->
 - Deployment: <!-- binary / Docker / Kubernetes -->
 - Region / endpoint in use:
 
