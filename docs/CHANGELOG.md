@@ -6,7 +6,7 @@
 
 - **Module major version is pinned at `0`** (Go only requires a `/vN` module path suffix when major ≥ 2, so the bare import path `github.com/shuiyihan12/uapi-go` stays valid). Tag format is `v0.WSDL.PATCH`, where `WSDL` is the Travelport WSDL contract version (the `wsdl/` folder suffix, e.g. `55` for the v55_0 contract) and `PATCH` is our own fix increment — e.g. `v0.55.1` = released 2026-08.
 - **Only a git tag counts as a release**; untagged commits are development state (the daemon shows `dev`).
-- **Patch versions** increment the `PATCH` segment: e.g. `v0.55.2` fixes anomalies in `v0.55.1`, with no new features. Patch releases carry backward-compatible fixes only; breaking changes always ride the WSDL minor (e.g. `v0.56.0`).
+- **Patch versions** increment the `PATCH` segment: e.g. `v0.55.2` follows `v0.55.1`. Patch releases carry backward-compatible fixes and additions; breaking changes always ride the WSDL minor (e.g. `v0.56.0`).
 - The version is injected via `-ldflags "-X main.version=..."`; visible via `uapi-go-daemon --version` and in startup logs.
 
 ---

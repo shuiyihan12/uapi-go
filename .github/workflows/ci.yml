@@ -42,7 +42,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -60,7 +60,9 @@ jobs:
           import (
               "fmt"
 
+              air "github.com/shuiyihan12/uapi-go/pkg/generated/air"
               hotel "github.com/shuiyihan12/uapi-go/pkg/generated/hotel"
+              system "github.com/shuiyihan12/uapi-go/pkg/generated/system"
               "github.com/shuiyihan12/uapi-go/sdk"
           )
 
@@ -70,12 +72,31 @@ jobs:
                   panic(err)
               }
               defer c.Close()
-              svc, err := c.Hotel()
-              if err != nil {
-                  panic(err)
+              // Exercise every exported domain accessor so a signature or
+              // type change anywhere in the library surface fails here.
+              for _, get := range []func() (bool, error){
+                  func() (bool, error) { s, err := c.Air(); return s != nil, err },
+                  func() (bool, error) { s, err := c.GdsQueue(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Hotel(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Rail(); return s != nil, err },
+                  func() (bool, error) { s, err := c.SharedBooking(); return s != nil, err },
+                  func() (bool, error) { s, err := c.SharedUprofile(); return s != nil, err },
+                  func() (bool, error) { s, err := c.System(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Terminal(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Universal(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Uprofile(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Util(); return s != nil, err },
+                  func() (bool, error) { s, err := c.Vehicle(); return s != nil, err },
+              } {
+                  ok, err := get()
+                  if err != nil || !ok {
+                      panic(err)
+                  }
               }
               var rsp hotel.HotelDetailsRsp
-              fmt.Println(svc != nil && rsp.XMLName.Local == "")
+              var _ air.LowFareSearchReq
+              var _ system.PingReq
+              fmt.Println("all 12 services constructed", rsp.XMLName.Local == "")
           }
           EOF
           go mod edit -replace github.com/shuiyihan12/uapi-go="$GITHUB_WORKSPACE"

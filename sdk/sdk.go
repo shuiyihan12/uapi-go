@@ -101,6 +101,12 @@ func WithKeepAlivePool(global, perHost int) Option {
 	}
 }
 
+// WithLogLevel sets the built-in logger's level ("debug", "info", "warn",
+// "error"); it only matters when no logger is injected via WithLogger.
+func WithLogLevel(level string) Option {
+	return func(c *manager.ServiceConfig) { c.LogLevel = level }
+}
+
 // WithLogger injects a logger (pkg/logging). nil keeps the built-in zap
 // logger derived from the log level; logging.Noop() silences all output.
 func WithLogger(l logging.Logger) Option {
