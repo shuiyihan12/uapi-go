@@ -5,7 +5,10 @@ package logging
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 	"go.uber.org/zap"
@@ -118,3 +121,67 @@ func (l *zapLogger) WithContext(ctx context.Context) Logger {
 	}
 	return l
 }
+
+// noopLogger discards everything — the zero-dependency default for library
+// consumers that bring their own logging stack.
+type noopLogger struct{}
+
+// Noop returns a Logger that discards all output. It is the recommended
+// default for SDK consumers that do not want uapi-go to log on its own.
+func Noop() Logger { return noopLogger{} }
+
+func (noopLogger) Debug(string, ...zap.Field) {}
+func (noopLogger) Info(string, ...zap.Field)  {}
+func (noopLogger) Error(string, ...zap.Field) {}
+func (noopLogger) Warn(string, ...zap.Field)  {}
+func (noopLogger) Raw(string)                 {}
+func (n noopLogger) With(...zap.Field) Logger { return n }
+
+// WithContext keeps returning the noop logger.
+func (n noopLogger) WithContext(context.Context) Logger { return n }
+
+// stdLogAdapter adapts the standard library *log.Logger to the Logger
+// interface for consumers without zap.
+type stdLogAdapter struct {
+	l *log.Logger
+}
+
+// NewStdLogAdapter wraps a standard library *log.Logger into a Logger.
+// Structured fields are flattened onto the line as key=value pairs.
+func NewStdLogAdapter(l *log.Logger) Logger { return stdLogAdapter{l: l} }
+
+func (a stdLogAdapter) log(level, msg string, fields []zap.Field) {
+	var b strings.Builder
+	b.WriteString(level)
+	b.WriteByte(' ')
+	b.WriteString(msg)
+	for _, f := range fields {
+		b.WriteByte(' ')
+		b.WriteString(f.Key)
+		b.WriteByte('=')
+		val := f.String
+		if val == "" {
+			switch {
+			case f.Interface != nil:
+				val = fmt.Sprintf("%v", f.Interface)
+			case f.Integer != 0:
+				val = strconv.FormatInt(f.Integer, 10)
+			}
+		}
+		b.WriteString(val)
+	}
+	a.l.Print(b.String())
+}
+
+func (a stdLogAdapter) Debug(msg string, fields ...zap.Field) { a.log("DEBUG", msg, fields) }
+func (a stdLogAdapter) Info(msg string, fields ...zap.Field)  { a.log("INFO", msg, fields) }
+func (a stdLogAdapter) Error(msg string, fields ...zap.Field) { a.log("ERROR", msg, fields) }
+func (a stdLogAdapter) Warn(msg string, fields ...zap.Field)  { a.log("WARN", msg, fields) }
+
+// Raw writes the payload verbatim.
+func (a stdLogAdapter) Raw(msg string) { a.l.Print(msg) }
+
+func (a stdLogAdapter) With(...zap.Field) Logger { return a }
+
+// WithContext keeps returning the same adapter; trace fields are dropped.
+func (a stdLogAdapter) WithContext(context.Context) Logger { return a }

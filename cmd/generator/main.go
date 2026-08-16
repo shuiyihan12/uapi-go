@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/shuiyihan12/uapi-go/pkg/client"
-	"github.com/shuiyihan12/uapi-go/internal/logging"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"go.uber.org/zap"
 )
 

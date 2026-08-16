@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shuiyihan12/uapi-go/internal/logging"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 	"go.uber.org/zap"

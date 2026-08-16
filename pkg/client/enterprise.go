@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shuiyihan12/uapi-go/internal/logging"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/internal/metrics"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
 	"go.uber.org/zap"

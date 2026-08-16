@@ -11,7 +11,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/internal/logging"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	vehiclexsd "github.com/shuiyihan12/uapi-go/pkg/generated/vehicle"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
