@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	uprofilexsd "github.com/shuiyihan12/uapi-go/pkg/generated/uprofile"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 )
 

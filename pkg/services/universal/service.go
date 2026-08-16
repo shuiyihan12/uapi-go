@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	airxsd "github.com/shuiyihan12/uapi-go/pkg/generated/air"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 )
 

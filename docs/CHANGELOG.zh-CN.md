@@ -6,7 +6,7 @@
 
 - **模块主版本固定为 `0`**（Go 仅在 major ≥ 2 时要求 `/vN` 路径后缀，故裸路径 `github.com/shuiyihan12/uapi-go` 始终合法）。tag 格式为 `v0.WSDL.PATCH`，其中 `WSDL` 为 Travelport WSDL 契约版本号（即 `wsdl/` 目录版本后缀，如 v55_0 契约对应 `55`），`PATCH` 为我方自增补丁号——例如 `v0.55.1` = 2026-08 发布。
 - **只有打 git tag 才算发布新版本**；未打 tag 的提交属于开发态（daemon 显示 `dev`）。
-- **补丁版本**递增 `PATCH` 段：如 `v0.55.2` 仅用于修复 `v0.55.1` 的异常，不引入新功能。
+- **补丁版本**递增 `PATCH` 段：如 `v0.55.2` 仅用于修复 `v0.55.1` 的异常，不引入新功能。补丁仅包含向后兼容的修复；破坏性变更一律随 WSDL 位（minor）发布（如 `v0.56.0`）。
 - 版本号经 `-ldflags "-X main.version=..."` 注入二进制，`uapi-go-daemon --version` / 启动日志可见。
 
 ---

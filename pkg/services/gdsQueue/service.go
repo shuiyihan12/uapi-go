@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	gdsqueuexsd "github.com/shuiyihan12/uapi-go/pkg/generated/gdsqueue"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 )
 

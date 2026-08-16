@@ -12,8 +12,8 @@ package hotel
 import (
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 )
 
 // HotelService is the SOAP client for the Travelport Hotel service.

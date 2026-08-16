@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	sharedbookingxsd "github.com/shuiyihan12/uapi-go/pkg/generated/sharedbooking"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 )
 

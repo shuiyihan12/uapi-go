@@ -35,3 +35,49 @@ jobs:
             echo "::error::pkg/generated is out of date. Run ./scripts/build.sh wsdl and commit the result."
             exit 1
           }
+
+  sdk-import:
+    name: SDK import smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      # Guards the library surface: an external module must be able to
+      # import and compile against the sdk and generated packages.
+      - name: Build an external module importing the SDK
+        run: |
+          mkdir -p /tmp/consumer && cd /tmp/consumer
+          go mod init consumer.example.com
+          cat > main.go <<'EOF'
+          package main
+
+          import (
+              "fmt"
+
+              hotel "github.com/shuiyihan12/uapi-go/pkg/generated/hotel"
+              "github.com/shuiyihan12/uapi-go/sdk"
+          )
+
+          func main() {
+              c, err := sdk.New()
+              if err != nil {
+                  panic(err)
+              }
+              defer c.Close()
+              svc, err := c.Hotel()
+              if err != nil {
+                  panic(err)
+              }
+              var rsp hotel.HotelDetailsRsp
+              fmt.Println(svc != nil && rsp.XMLName.Local == "")
+          }
+          EOF
+          go mod edit -replace github.com/shuiyihan12/uapi-go="$GITHUB_WORKSPACE"
+          go mod tidy
+          go build ./...

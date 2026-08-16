@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/client"
 	terminalxsd "github.com/shuiyihan12/uapi-go/pkg/generated/terminal"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/trace"
 )
 
