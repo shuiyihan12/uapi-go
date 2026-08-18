@@ -11,6 +11,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -314,26 +316,227 @@ func (c *SOAPClient) Call(ctx context.Context, action string, request interface{
 	return bodyContents, nil
 }
 
-// buildEnvelope serializes the request body into a full SOAP envelope.
-// Travelport UAPI request auth travels in the HTTP Authorization header and
-// the SOAP <Header> is empty (matching the official samples); the trace ID
-// rides on the request body's TraceId attribute rather than a custom SOAP
-// header.
+// buildEnvelope wraps the marshaled request body in a SOAP envelope. The
+// SOAP <Header/> is omitted — it carries no content (auth/trace ride on the
+// HTTP header and the body's TraceId). The body's namespaces are hoisted to
+// the request root as readable prefixes (e.g. xmlns:hotel="...hotel_v55_0",
+// xmlns:common="...common_v55_0") so each element is not repeatedly declaring
+// its default namespace — matching the official sample's shape.
 func (c *SOAPClient) buildEnvelope(request interface{}) ([]byte, error) {
 	body, err := xml.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal SOAP request body: %v", err)
 	}
 
+	body, err = hoistNamespaces(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hoist SOAP namespaces: %v", err)
+	}
+
 	envelope := bytes.NewBuffer(nil)
 	envelope.WriteString(`<?xml version="1.0" encoding="UTF-8"?>`)
 	envelope.WriteString(`<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">`)
-	envelope.WriteString(`<soapenv:Header/>`)
 	envelope.WriteString(`<soapenv:Body>`)
 	envelope.Write(body)
 	envelope.WriteString(`</soapenv:Body>`)
 	envelope.WriteString(`</soapenv:Envelope>`)
 	return envelope.Bytes(), nil
+}
+
+// hoistNamespaces rewrites a marshaled request body so that every distinct
+// XML namespace is declared exactly once on the request root element as a
+// readable prefix (hotel_v55_0 -> hotel, common_v55_0 -> common, ...), and
+// each element/attribute that carries that namespace uses the prefix instead
+// of repeating a default xmlns declaration.
+//
+// The transform is generic and URI-driven: it works off whatever namespace
+// URIs appear in the body, so it applies unchanged to every UAPI service
+// (air/rail/vehicle/universal/...) and every schema version. The repeated
+// default-namespace declarations produced by encoding/xml's Marshal are what
+// we collapse here.
+func hoistNamespaces(body []byte) ([]byte, error) {
+	uris := collectNamespaces(body)
+	prefixFor := make(map[string]string, len(uris))
+	used := make(map[string]struct{}, len(uris))
+	for _, u := range uris {
+		p := namespacePrefix(u)
+		if _, dup := used[p]; dup {
+			// Extremely unlikely (same domain at two versions in one
+			// request); fall back to the full tail segment to stay unique.
+			seg := u
+			if i := strings.LastIndexByte(u, '/'); i >= 0 {
+				seg = u[i+1:]
+			}
+			p = seg
+		}
+		used[p] = struct{}{}
+		prefixFor[u] = p
+	}
+
+	var buf bytes.Buffer
+	dec := xml.NewDecoder(bytes.NewReader(body))
+	dec.CharsetReader = charset.NewReaderLabel
+
+	rootWritten := false
+	for {
+		tok, err := dec.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		switch t := tok.(type) {
+		case xml.StartElement:
+			var attrs strings.Builder
+			if !rootWritten {
+				// Declare every namespace once on the request root.
+				for _, u := range uris {
+					attrs.WriteString(` xmlns:`)
+					attrs.WriteString(prefixFor[u])
+					attrs.WriteString(`="`)
+					attrs.WriteString(escapeAttr(u))
+					attrs.WriteString(`"`)
+				}
+				rootWritten = true
+			}
+			for _, a := range t.Attr {
+				if isNamespaceDecl(a) {
+					continue // drop the per-element default xmlns declarations
+				}
+				attrs.WriteString(` `)
+				attrs.WriteString(qualifiedAttrName(a, prefixFor))
+				attrs.WriteString(`="`)
+				attrs.WriteString(escapeAttr(a.Value))
+				attrs.WriteString(`"`)
+			}
+			buf.WriteByte('<')
+			buf.WriteString(qualifiedLocalName(t.Name, prefixFor))
+			buf.WriteString(attrs.String())
+			buf.WriteString(`>`)
+		case xml.EndElement:
+			buf.WriteString(`</`)
+			buf.WriteString(qualifiedLocalName(t.Name, prefixFor))
+			buf.WriteString(`>`)
+		case xml.CharData:
+			if err := xml.EscapeText(&buf, t); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// collectNamespaces returns every distinct namespace URI that appears on an
+// element or attribute name, or inside a default-namespace declaration, in
+// the given body. The result is sorted for deterministic output.
+func collectNamespaces(body []byte) []string {
+	dec := xml.NewDecoder(bytes.NewReader(body))
+	dec.CharsetReader = charset.NewReaderLabel
+	set := make(map[string]struct{})
+	for {
+		tok, err := dec.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		se, ok := tok.(xml.StartElement)
+		if !ok {
+			continue
+		}
+		if se.Name.Space != "" {
+			set[se.Name.Space] = struct{}{}
+		}
+		for _, a := range se.Attr {
+			switch {
+			case a.Name.Space == "xmlns":
+				// xmlns:foo="uri" — the URI is the value.
+				set[a.Value] = struct{}{}
+			case a.Name.Space == "" && a.Name.Local == "xmlns":
+				// xmlns="uri" — the URI is the value.
+				set[a.Value] = struct{}{}
+			case a.Name.Space != "":
+				set[a.Name.Space] = struct{}{}
+			}
+		}
+	}
+	uris := make([]string, 0, len(set))
+	for u := range set {
+		uris = append(uris, u)
+	}
+	sort.Strings(uris)
+	return uris
+}
+
+// namespacePrefix derives a short, readable prefix from a namespace URI by
+// stripping the version suffix: hotel_v55_0 -> hotel, common_v55_0 ->
+// common, sharedBooking_v55_0 -> sharedBooking.
+func namespacePrefix(uri string) string {
+	seg := uri
+	if i := strings.LastIndexByte(uri, '/'); i >= 0 {
+		seg = uri[i+1:]
+	}
+	return versionRE.ReplaceAllString(seg, "")
+}
+
+// qualifiedLocalName renders an element/attribute XML name using its hoisted
+// prefix, or the bare local name when it is not namespaced.
+func qualifiedLocalName(n xml.Name, prefixFor map[string]string) string {
+	if n.Space == "" {
+		return n.Local
+	}
+	if p, ok := prefixFor[n.Space]; ok {
+		return p + ":" + n.Local
+	}
+	return n.Local
+}
+
+// qualifiedAttrName is qualifiedLocalName for attribute names.
+func qualifiedAttrName(a xml.Attr, prefixFor map[string]string) string {
+	if a.Name.Space == "" {
+		return a.Name.Local
+	}
+	if p, ok := prefixFor[a.Name.Space]; ok {
+		return p + ":" + a.Name.Local
+	}
+	return a.Name.Local
+}
+
+// isNamespaceDecl reports whether an attribute is an xmlns declaration
+// (either default xmlns="uri" or prefixed xmlns:foo="uri"), which we drop
+// because the hoisted prefixes are declared once on the request root.
+func isNamespaceDecl(a xml.Attr) bool {
+	return a.Name.Space == "xmlns" || (a.Name.Space == "" && a.Name.Local == "xmlns")
+}
+
+// versionRE matches a Travelport schema version suffix such as _v55_0 so it
+// can be stripped when deriving a namespace prefix.
+var versionRE = regexp.MustCompile(`_v\d+_\d+$`)
+
+// escapeAttr escapes a value for use inside an XML attribute (escaping &, <,
+// >, quotes). encoding/xml has no public attribute-value escaper, and its
+// EscapeText does not escape quotes.
+func escapeAttr(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case '&':
+			b.WriteString("&amp;")
+		case '<':
+			b.WriteString("&lt;")
+		case '>':
+			b.WriteString("&gt;")
+		case '"':
+			b.WriteString("&quot;")
+		case '\'':
+			b.WriteString("&apos;")
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 // extractSOAPBody parses the SOAP envelope and extracts the Body contents,

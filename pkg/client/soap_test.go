@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shuiyihan12/uapi-go/pkg/generated/common55"
+	"github.com/shuiyihan12/uapi-go/pkg/generated/hotel"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
 )
 
@@ -165,3 +167,76 @@ func TestExtractSOAPBodyReturnsFaultError(t *testing.T) {
 		t.Fatalf("unexpected fault error: %v", err)
 	}
 }
+
+// TestBuildEnvelopeNamespaceHoist locks the request envelope shape:
+// the SOAP prefix is soapenv, the empty Header is omitted, and the body's
+// namespaces are hoisted to the request root as readable prefixes (hotel,
+// common) rather than repeated default xmlns declarations per element.
+func TestBuildEnvelopeNamespaceHoist(t *testing.T) {
+	client := &SOAPClient{}
+
+	tb := common55.TypeBranchCode("P3735951")
+	req := hotel.HotelDetailsReq{
+		BaseHotelDetailsReq: hotel.BaseHotelDetailsReq{
+			BaseReq: common55.BaseReq{
+				BaseCoreReq: common55.BaseCoreReq{
+					TargetBranch: &tb,
+					TraceId:      strPtr("TP-f14c5698-a1ff-4613-b4b3-e47c6ba6f510"),
+					BillingPointOfSaleInfo: common55.BillingPointOfSaleInfo{
+						OriginApplication: "UAPI",
+					},
+				},
+			},
+			HotelProperty: hotel.HotelProperty{
+				HotelChain: "WY",
+				HotelCode:  "G5685",
+			},
+			HotelDetailsModifiers: &hotel.HotelDetailsModifiers{
+				HotelStay: hotel.HotelStay{
+					CheckinDate:  "2025-11-29",
+					CheckoutDate: "2025-11-30",
+				},
+			},
+		},
+	}
+
+	got, err := client.buildEnvelope(req)
+	if err != nil {
+		t.Fatalf("buildEnvelope returned error: %v", err)
+	}
+	out := string(got)
+
+	checks := []struct {
+		name string
+		want string
+	}{
+		{"soapenv prefix on Envelope", `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">`},
+		{"empty Header omitted", `<soapenv:Body>`},
+		{"hotel + common prefixes declared once on request root", `<hotel:HotelDetailsReq xmlns:common="http://www.travelport.com/schema/common_v55_0" xmlns:hotel="http://www.travelport.com/schema/hotel_v55_0"`},
+		{"common element uses prefix", `<common:BillingPointOfSaleInfo`},
+		{"hotel element uses prefix", `<hotel:HotelProperty`},
+		{"hotel child element uses prefix", `<hotel:CheckinDate>`},
+	}
+	for _, c := range checks {
+		if !strings.Contains(out, c.want) {
+			t.Errorf("check %q: expected output to contain %q\nfull output:\n%s", c.name, c.want, out)
+		}
+	}
+
+	// The namespace prefixes are declared once on the request root, so no
+	// element may carry a repeated default-namespace declaration.
+	negatives := []struct {
+		name string
+		bad  string
+	}{
+		{"no per-element repeated common xmlns", `xmlns="http://www.travelport.com/schema/common_v55_0"`},
+		{"no per-element repeated hotel xmlns", `xmlns="http://www.travelport.com/schema/hotel_v55_0"`},
+	}
+	for _, n := range negatives {
+		if strings.Contains(out, n.bad) {
+			t.Errorf("negative check %q: output must NOT contain %q\nfull output:\n%s", n.name, n.bad, out)
+		}
+	}
+}
+
+func strPtr(s string) *string { return &s }
