@@ -221,7 +221,7 @@ Alias routes (9 in total, all proxying to `UniversalFacade`):
 | `POST /api/passive/book` | `PassiveCreateReservation` | `UniversalRecordService` |
 | `POST /api/passive/cancel` | `PassiveCancel` | `UniversalRecordService` |
 
-> Note **rail has no `/rail/cancel`**: rail-segment cancellation goes through `UniversalRecordCancel` (record-level cancel) in Travelport, so no product-level alias exists — call `POST /api/universal/universal-record-cancel` directly.
+> Note **rail has no `/rail/cancel`**: rail-segment cancellation goes through `UniversalRecordCancel` (record-level cancel) in Travelport, so no product-level alias exists — call `POST /api/universal/record-cancel` directly.
 >
 > `passive` (passive segments) has **no standalone WSDL / portType** in UAPI and can only be reached through `UniversalRecordService`; the project provides a dedicated `PassiveHandler` proxying `/passive/book` and `/passive/cancel` to `UniversalFacade`.
 

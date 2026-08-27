@@ -23,5 +23,5 @@ func (h *TerminalHandler) RegisterRoutes(mux *http.ServeMux) {
 	f := h.facade
 	registerPortHandler(mux, apiBasePath+"/terminal/create-terminal-session", f.CreateTerminalSession)
 	registerPortHandler(mux, apiBasePath+"/terminal/end-terminal-session", f.EndTerminalSession)
-	registerPortHandler(mux, apiBasePath+"/terminal/terminal", f.Terminal)
+	registerPortHandler(mux, apiBasePath+"/terminal/command", f.Terminal)
 }

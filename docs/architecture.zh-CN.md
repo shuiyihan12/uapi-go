@@ -221,7 +221,7 @@ flowchart LR
 | `POST /api/passive/book` | `PassiveCreateReservation` | `UniversalRecordService` |
 | `POST /api/passive/cancel` | `PassiveCancel` | `UniversalRecordService` |
 
-> 注意 **rail 没有 `/rail/cancel`**：火车段的取消在 Travelport 里走 `UniversalRecordCancel`（统一记录级取消），因此不提供产品级别名，直接调用 `POST /api/universal/universal-record-cancel`。
+> 注意 **rail 没有 `/rail/cancel`**：火车段的取消在 Travelport 里走 `UniversalRecordCancel`（统一记录级取消），因此不提供产品级别名，直接调用 `POST /api/universal/record-cancel`。
 >
 > `passive`（被动段）在 UAPI 里**没有独立的 WSDL / portType**，只能经由 `UniversalRecordService` 操作；本项目为此单独建了 `PassiveHandler`，把 `/passive/book`、`/passive/cancel` 代理到 `UniversalFacade`。
 

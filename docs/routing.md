@@ -22,24 +22,24 @@ Legend:
 | `/api/air/flight-time-table` | `FlightTimeTable` | AirService | flight timetable |
 | `/api/air/flight-details` | `FlightDetails` | AirService | flight details |
 | `/api/air/flight-information` | `FlightInformation` | AirService | flight information |
-| `/api/air/air-price` | `AirPrice` | AirService | pricing |
-| `/api/air/air-reprice` | `AirReprice` | AirService | repricing |
-| `/api/air/air-fare-display` | `AirFareDisplay` | AirService | fare display |
-| `/api/air/air-fare-rules` | `AirFareRules` | AirService | fare rules |
-| `/api/air/air-ticketing` | `AirTicketing` | AirService | ticketing |
-| `/api/air/air-void-document` | `AirVoidDocument` | AirService | void document |
-| `/api/air/air-retrieve-document` | `AirRetrieveDocument` | AirService | retrieve document |
-| `/api/air/air-refund` | `AirRefund` | AirService | refund |
-| `/api/air/air-refund-quote` | `AirRefundQuote` | AirService | refund quote |
-| `/api/air/air-exchange` | `AirExchange` | AirService | exchange |
-| `/api/air/air-exchange-quote` | `AirExchangeQuote` | AirService | exchange quote |
-| `/api/air/air-exchange-eligibility` | `AirExchangeEligibility` | AirService | exchange eligibility |
-| `/api/air/air-exchange-multi-quote` | `AirExchangeMultiQuote` | AirService | multi-segment exchange quote |
-| `/api/air/air-exchange-ticketing` | `AirExchangeTicketing` | AirService | exchange ticketing |
-| `/api/air/air-merchandising-details` | `AirMerchandisingDetails` | AirService | ancillary details |
-| `/api/air/air-merchandising-offer-availability` | `AirMerchandisingOfferAvailability` | AirService | ancillary offer availability |
-| `/api/air/air-upsell-search` | `AirUpsellSearch` | AirService | upsell search |
-| `/api/air/air-pre-pay` | `AirPrePay` | AirService | pre-pay |
+| `/api/air/price` | `AirPrice` | AirService | pricing |
+| `/api/air/reprice` | `AirReprice` | AirService | repricing |
+| `/api/air/fare-display` | `AirFareDisplay` | AirService | fare display |
+| `/api/air/fare-rules` | `AirFareRules` | AirService | fare rules |
+| `/api/air/ticketing` | `AirTicketing` | AirService | ticketing |
+| `/api/air/void-document` | `AirVoidDocument` | AirService | void document |
+| `/api/air/retrieve-document` | `AirRetrieveDocument` | AirService | retrieve document |
+| `/api/air/refund` | `AirRefund` | AirService | refund |
+| `/api/air/refund-quote` | `AirRefundQuote` | AirService | refund quote |
+| `/api/air/exchange` | `AirExchange` | AirService | exchange |
+| `/api/air/exchange-quote` | `AirExchangeQuote` | AirService | exchange quote |
+| `/api/air/exchange-eligibility` | `AirExchangeEligibility` | AirService | exchange eligibility |
+| `/api/air/exchange-multi-quote` | `AirExchangeMultiQuote` | AirService | multi-segment exchange quote |
+| `/api/air/exchange-ticketing` | `AirExchangeTicketing` | AirService | exchange ticketing |
+| `/api/air/merchandising-details` | `AirMerchandisingDetails` | AirService | ancillary details |
+| `/api/air/merchandising-offer-availability` | `AirMerchandisingOfferAvailability` | AirService | ancillary offer availability |
+| `/api/air/upsell-search` | `AirUpsellSearch` | AirService | upsell search |
+| `/api/air/pre-pay` | `AirPrePay` | AirService | pre-pay |
 | `/api/air/emd-issuance` | `EMDIssuance` | AirService | issue EMD |
 | `/api/air/emd-retrieve` | `EMDRetrieve` | AirService | retrieve EMD |
 | `/api/air/seat-map` | `SeatMap` | AirService | seat map |
@@ -71,13 +71,13 @@ Legend:
 
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
-| `/api/rail/rail-availability-search` | `RailAvailabilitySearch` | RailService | rail availability search |
-| `/api/rail/rail-seat-map` | `RailSeatMap` | RailService | rail seat map |
-| `/api/rail/rail-exchange` | `RailExchange` | RailService | rail exchange |
-| `/api/rail/rail-exchange-quote` | `RailExchangeQuote` | RailService | rail exchange quote |
-| `/api/rail/rail-refund` | `RailRefund` | RailService | rail refund |
-| `/api/rail/rail-refund-quote` | `RailRefundQuote` | RailService | rail refund quote |
-| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService (alias)** | create rail booking (no `/rail/cancel`; cancellation goes through `/api/universal/universal-record-cancel`) |
+| `/api/rail/availability-search` | `RailAvailabilitySearch` | RailService | rail availability search |
+| `/api/rail/seat-map` | `RailSeatMap` | RailService | rail seat map |
+| `/api/rail/exchange` | `RailExchange` | RailService | rail exchange |
+| `/api/rail/exchange-quote` | `RailExchangeQuote` | RailService | rail exchange quote |
+| `/api/rail/refund` | `RailRefund` | RailService | rail refund |
+| `/api/rail/refund-quote` | `RailRefundQuote` | RailService | rail refund quote |
+| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService (alias)** | create rail booking (no `/rail/cancel`; cancellation goes through `/api/universal/record-cancel`) |
 
 ---
 
@@ -85,14 +85,14 @@ Legend:
 
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
-| `/api/vehicle/vehicle-search-availability` | `VehicleSearchAvailability` | VehicleService | vehicle availability search |
-| `/api/vehicle/vehicle-upsell-search-availability` | `VehicleUpsellSearchAvailability` | VehicleService | vehicle upsell search |
-| `/api/vehicle/vehicle-location` | `VehicleLocation` | VehicleService | vehicle locations |
-| `/api/vehicle/vehicle-location-detail` | `VehicleLocationDetail` | VehicleService | location details |
-| `/api/vehicle/vehicle-rules` | `VehicleRules` | VehicleService | vehicle rules |
-| `/api/vehicle/vehicle-retrieve` | `VehicleRetrieve` | VehicleService | retrieve vehicle booking |
-| `/api/vehicle/vehicle-keyword` | `VehicleKeyword` | VehicleService | keywords |
-| `/api/vehicle/vehicle-media-links` | `VehicleMediaLinks` | VehicleService | media links |
+| `/api/vehicle/search-availability` | `VehicleSearchAvailability` | VehicleService | vehicle availability search |
+| `/api/vehicle/upsell-search-availability` | `VehicleUpsellSearchAvailability` | VehicleService | vehicle upsell search |
+| `/api/vehicle/location` | `VehicleLocation` | VehicleService | vehicle locations |
+| `/api/vehicle/location-detail` | `VehicleLocationDetail` | VehicleService | location details |
+| `/api/vehicle/rules` | `VehicleRules` | VehicleService | vehicle rules |
+| `/api/vehicle/retrieve` | `VehicleRetrieve` | VehicleService | retrieve vehicle booking |
+| `/api/vehicle/keyword` | `VehicleKeyword` | VehicleService | keywords |
+| `/api/vehicle/media-links` | `VehicleMediaLinks` | VehicleService | media links |
 | `/api/vehicle/book` | `VehicleCreateReservation` | **UniversalRecordService (alias)** | create vehicle booking |
 | `/api/vehicle/cancel` | `VehicleCancel` | **UniversalRecordService (alias)** | cancel vehicle booking |
 
@@ -114,11 +114,11 @@ Cross-product create / cancel / unified modify / saved trips / passive segments 
 | `/api/universal/vehicle-cancel` | `VehicleCancel` | UniversalRecordService | cancel vehicle |
 | `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | UniversalRecordService | create passive segment |
 | `/api/universal/passive-cancel` | `PassiveCancel` | UniversalRecordService | cancel passive segment |
-| `/api/universal/universal-record-cancel` | `UniversalRecordCancel` | UniversalRecordService | cancel universal record (rail cancellation goes here) |
-| `/api/universal/universal-record-import` | `UniversalRecordImport` | UniversalRecordService | import universal record |
-| `/api/universal/universal-record-modify` | `UniversalRecordModify` | UniversalRecordService | modify universal record |
-| `/api/universal/universal-record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | retrieve universal record |
-| `/api/universal/universal-record-search` | `UniversalRecordSearch` | UniversalRecordService | search universal records |
+| `/api/universal/record-cancel` | `UniversalRecordCancel` | UniversalRecordService | cancel universal record (rail cancellation goes here) |
+| `/api/universal/record-import` | `UniversalRecordImport` | UniversalRecordService | import universal record |
+| `/api/universal/record-modify` | `UniversalRecordModify` | UniversalRecordService | modify universal record |
+| `/api/universal/record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | retrieve universal record |
+| `/api/universal/record-search` | `UniversalRecordSearch` | UniversalRecordService | search universal records |
 | `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | UniversalRecordService | provider reservation details |
 | `/api/universal/provider-reservation-divide` | `ProviderReservationDivide` | UniversalRecordService | divide provider reservation |
 | `/api/universal/ack-schedule-change` | `AckScheduleChange` | UniversalRecordService | acknowledge schedule change |
@@ -229,14 +229,14 @@ PNR element-level booking operations (Travelport Shared Booking).
 
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
-| `/api/gdsQueue/gds-queue-list` | `GdsQueueList` | GdsQueueService | queue list |
-| `/api/gdsQueue/gds-queue-count` | `GdsQueueCount` | GdsQueueService | queue count |
-| `/api/gdsQueue/gds-queue-place` | `GdsQueuePlace` | GdsQueueService | place on queue |
-| `/api/gdsQueue/gds-queue-remove` | `GdsQueueRemove` | GdsQueueService | remove from queue |
-| `/api/gdsQueue/gds-enter-queue` | `GdsEnterQueue` | GdsQueueService | enter queue |
-| `/api/gdsQueue/gds-exit-queue` | `GdsExitQueue` | GdsQueueService | exit queue |
-| `/api/gdsQueue/gds-next-on-queue` | `GdsNextOnQueue` | GdsQueueService | next on queue |
-| `/api/gdsQueue/gds-queue-agent-list` | `GdsQueueAgentList` | GdsQueueService | queue agent list |
+| `/api/gdsQueue/queue-list` | `GdsQueueList` | GdsQueueService | queue list |
+| `/api/gdsQueue/queue-count` | `GdsQueueCount` | GdsQueueService | queue count |
+| `/api/gdsQueue/queue-place` | `GdsQueuePlace` | GdsQueueService | place on queue |
+| `/api/gdsQueue/queue-remove` | `GdsQueueRemove` | GdsQueueService | remove from queue |
+| `/api/gdsQueue/enter-queue` | `GdsEnterQueue` | GdsQueueService | enter queue |
+| `/api/gdsQueue/exit-queue` | `GdsExitQueue` | GdsQueueService | exit queue |
+| `/api/gdsQueue/next-on-queue` | `GdsNextOnQueue` | GdsQueueService | next on queue |
+| `/api/gdsQueue/queue-agent-list` | `GdsQueueAgentList` | GdsQueueService | queue agent list |
 
 ---
 
@@ -245,7 +245,7 @@ PNR element-level booking operations (Travelport Shared Booking).
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
 | `/api/terminal/create-terminal-session` | `CreateTerminalSession` | TerminalService | create terminal session |
-| `/api/terminal/terminal` | `Terminal` | TerminalService | send terminal command |
+| `/api/terminal/command` | `Terminal` | TerminalService | send terminal command |
 | `/api/terminal/end-terminal-session` | `EndTerminalSession` | TerminalService | end terminal session |
 
 ---

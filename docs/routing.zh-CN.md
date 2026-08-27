@@ -22,24 +22,24 @@
 | `/api/air/flight-time-table` | `FlightTimeTable` | AirService | 航班时刻表 |
 | `/api/air/flight-details` | `FlightDetails` | AirService | 航班详情 |
 | `/api/air/flight-information` | `FlightInformation` | AirService | 航班信息 |
-| `/api/air/air-price` | `AirPrice` | AirService | 计价 |
-| `/api/air/air-reprice` | `AirReprice` | AirService | 重新计价 |
-| `/api/air/air-fare-display` | `AirFareDisplay` | AirService | 票价展示 |
-| `/api/air/air-fare-rules` | `AirFareRules` | AirService | 票价规则 |
-| `/api/air/air-ticketing` | `AirTicketing` | AirService | 出票 |
-| `/api/air/air-void-document` | `AirVoidDocument` | AirService | 作废票证 |
-| `/api/air/air-retrieve-document` | `AirRetrieveDocument` | AirService | 取回票证 |
-| `/api/air/air-refund` | `AirRefund` | AirService | 退票 |
-| `/api/air/air-refund-quote` | `AirRefundQuote` | AirService | 退票报价 |
-| `/api/air/air-exchange` | `AirExchange` | AirService | 换开 |
-| `/api/air/air-exchange-quote` | `AirExchangeQuote` | AirService | 换开报价 |
-| `/api/air/air-exchange-eligibility` | `AirExchangeEligibility` | AirService | 换开资格 |
-| `/api/air/air-exchange-multi-quote` | `AirExchangeMultiQuote` | AirService | 多段换开报价 |
-| `/api/air/air-exchange-ticketing` | `AirExchangeTicketing` | AirService | 换开出票 |
-| `/api/air/air-merchandising-details` | `AirMerchandisingDetails` | AirService | 辅营详情 |
-| `/api/air/air-merchandising-offer-availability` | `AirMerchandisingOfferAvailability` | AirService | 辅营报价 |
-| `/api/air/air-upsell-search` | `AirUpsellSearch` | AirService | 升舱/加价搜索 |
-| `/api/air/air-pre-pay` | `AirPrePay` | AirService | 预付 |
+| `/api/air/price` | `AirPrice` | AirService | 计价 |
+| `/api/air/reprice` | `AirReprice` | AirService | 重新计价 |
+| `/api/air/fare-display` | `AirFareDisplay` | AirService | 票价展示 |
+| `/api/air/fare-rules` | `AirFareRules` | AirService | 票价规则 |
+| `/api/air/ticketing` | `AirTicketing` | AirService | 出票 |
+| `/api/air/void-document` | `AirVoidDocument` | AirService | 作废票证 |
+| `/api/air/retrieve-document` | `AirRetrieveDocument` | AirService | 取回票证 |
+| `/api/air/refund` | `AirRefund` | AirService | 退票 |
+| `/api/air/refund-quote` | `AirRefundQuote` | AirService | 退票报价 |
+| `/api/air/exchange` | `AirExchange` | AirService | 换开 |
+| `/api/air/exchange-quote` | `AirExchangeQuote` | AirService | 换开报价 |
+| `/api/air/exchange-eligibility` | `AirExchangeEligibility` | AirService | 换开资格 |
+| `/api/air/exchange-multi-quote` | `AirExchangeMultiQuote` | AirService | 多段换开报价 |
+| `/api/air/exchange-ticketing` | `AirExchangeTicketing` | AirService | 换开出票 |
+| `/api/air/merchandising-details` | `AirMerchandisingDetails` | AirService | 辅营详情 |
+| `/api/air/merchandising-offer-availability` | `AirMerchandisingOfferAvailability` | AirService | 辅营报价 |
+| `/api/air/upsell-search` | `AirUpsellSearch` | AirService | 升舱/加价搜索 |
+| `/api/air/pre-pay` | `AirPrePay` | AirService | 预付 |
 | `/api/air/emd-issuance` | `EMDIssuance` | AirService | 开具 EMD |
 | `/api/air/emd-retrieve` | `EMDRetrieve` | AirService | 取回 EMD |
 | `/api/air/seat-map` | `SeatMap` | AirService | 座位图 |
@@ -71,13 +71,13 @@
 
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
-| `/api/rail/rail-availability-search` | `RailAvailabilitySearch` | RailService | 火车余票检索 |
-| `/api/rail/rail-seat-map` | `RailSeatMap` | RailService | 火车座位图 |
-| `/api/rail/rail-exchange` | `RailExchange` | RailService | 火车换开 |
-| `/api/rail/rail-exchange-quote` | `RailExchangeQuote` | RailService | 火车换开报价 |
-| `/api/rail/rail-refund` | `RailRefund` | RailService | 火车退票 |
-| `/api/rail/rail-refund-quote` | `RailRefundQuote` | RailService | 火车退票报价 |
-| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService（别名）** | 创建火车预订（无 `/rail/cancel`，取消见 `/api/universal/universal-record-cancel`） |
+| `/api/rail/availability-search` | `RailAvailabilitySearch` | RailService | 火车余票检索 |
+| `/api/rail/seat-map` | `RailSeatMap` | RailService | 火车座位图 |
+| `/api/rail/exchange` | `RailExchange` | RailService | 火车换开 |
+| `/api/rail/exchange-quote` | `RailExchangeQuote` | RailService | 火车换开报价 |
+| `/api/rail/refund` | `RailRefund` | RailService | 火车退票 |
+| `/api/rail/refund-quote` | `RailRefundQuote` | RailService | 火车退票报价 |
+| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService（别名）** | 创建火车预订（无 `/rail/cancel`，取消见 `/api/universal/record-cancel`） |
 
 ---
 
@@ -85,14 +85,14 @@
 
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
-| `/api/vehicle/vehicle-search-availability` | `VehicleSearchAvailability` | VehicleService | 租车可用性搜索 |
-| `/api/vehicle/vehicle-upsell-search-availability` | `VehicleUpsellSearchAvailability` | VehicleService | 租车加价搜索 |
-| `/api/vehicle/vehicle-location` | `VehicleLocation` | VehicleService | 租车门店 |
-| `/api/vehicle/vehicle-location-detail` | `VehicleLocationDetail` | VehicleService | 门店详情 |
-| `/api/vehicle/vehicle-rules` | `VehicleRules` | VehicleService | 租车规则 |
-| `/api/vehicle/vehicle-retrieve` | `VehicleRetrieve` | VehicleService | 取回租车预订 |
-| `/api/vehicle/vehicle-keyword` | `VehicleKeyword` | VehicleService | 关键词 |
-| `/api/vehicle/vehicle-media-links` | `VehicleMediaLinks` | VehicleService | 媒体链接 |
+| `/api/vehicle/search-availability` | `VehicleSearchAvailability` | VehicleService | 租车可用性搜索 |
+| `/api/vehicle/upsell-search-availability` | `VehicleUpsellSearchAvailability` | VehicleService | 租车加价搜索 |
+| `/api/vehicle/location` | `VehicleLocation` | VehicleService | 租车门店 |
+| `/api/vehicle/location-detail` | `VehicleLocationDetail` | VehicleService | 门店详情 |
+| `/api/vehicle/rules` | `VehicleRules` | VehicleService | 租车规则 |
+| `/api/vehicle/retrieve` | `VehicleRetrieve` | VehicleService | 取回租车预订 |
+| `/api/vehicle/keyword` | `VehicleKeyword` | VehicleService | 关键词 |
+| `/api/vehicle/media-links` | `VehicleMediaLinks` | VehicleService | 媒体链接 |
 | `/api/vehicle/book` | `VehicleCreateReservation` | **UniversalRecordService（别名）** | 创建租车预订 |
 | `/api/vehicle/cancel` | `VehicleCancel` | **UniversalRecordService（别名）** | 取消租车预订 |
 
@@ -114,11 +114,11 @@
 | `/api/universal/vehicle-cancel` | `VehicleCancel` | UniversalRecordService | 租车取消 |
 | `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | UniversalRecordService | 被动段创建 |
 | `/api/universal/passive-cancel` | `PassiveCancel` | UniversalRecordService | 被动段取消 |
-| `/api/universal/universal-record-cancel` | `UniversalRecordCancel` | UniversalRecordService | 统一记录取消（火车取消走这里） |
-| `/api/universal/universal-record-import` | `UniversalRecordImport` | UniversalRecordService | 导入统一记录 |
-| `/api/universal/universal-record-modify` | `UniversalRecordModify` | UniversalRecordService | 统一记录修改 |
-| `/api/universal/universal-record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | 取回统一记录 |
-| `/api/universal/universal-record-search` | `UniversalRecordSearch` | UniversalRecordService | 搜索统一记录 |
+| `/api/universal/record-cancel` | `UniversalRecordCancel` | UniversalRecordService | 统一记录取消（火车取消走这里） |
+| `/api/universal/record-import` | `UniversalRecordImport` | UniversalRecordService | 导入统一记录 |
+| `/api/universal/record-modify` | `UniversalRecordModify` | UniversalRecordService | 统一记录修改 |
+| `/api/universal/record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | 取回统一记录 |
+| `/api/universal/record-search` | `UniversalRecordSearch` | UniversalRecordService | 搜索统一记录 |
 | `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | UniversalRecordService | 供应商预订明细 |
 | `/api/universal/provider-reservation-divide` | `ProviderReservationDivide` | UniversalRecordService | 拆分供应商预订 |
 | `/api/universal/ack-schedule-change` | `AckScheduleChange` | UniversalRecordService | 确认航班变动 |
@@ -229,14 +229,14 @@ PNR 元素级的预订操作（Travelport Shared Booking）。
 
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
-| `/api/gdsQueue/gds-queue-list` | `GdsQueueList` | GdsQueueService | 队列列表 |
-| `/api/gdsQueue/gds-queue-count` | `GdsQueueCount` | GdsQueueService | 队列计数 |
-| `/api/gdsQueue/gds-queue-place` | `GdsQueuePlace` | GdsQueueService | 入队 |
-| `/api/gdsQueue/gds-queue-remove` | `GdsQueueRemove` | GdsQueueService | 出队移除 |
-| `/api/gdsQueue/gds-enter-queue` | `GdsEnterQueue` | GdsQueueService | 进入队列 |
-| `/api/gdsQueue/gds-exit-queue` | `GdsExitQueue` | GdsQueueService | 退出队列 |
-| `/api/gdsQueue/gds-next-on-queue` | `GdsNextOnQueue` | GdsQueueService | 取队列下一条 |
-| `/api/gdsQueue/gds-queue-agent-list` | `GdsQueueAgentList` | GdsQueueService | 队列坐席列表 |
+| `/api/gdsQueue/queue-list` | `GdsQueueList` | GdsQueueService | 队列列表 |
+| `/api/gdsQueue/queue-count` | `GdsQueueCount` | GdsQueueService | 队列计数 |
+| `/api/gdsQueue/queue-place` | `GdsQueuePlace` | GdsQueueService | 入队 |
+| `/api/gdsQueue/queue-remove` | `GdsQueueRemove` | GdsQueueService | 出队移除 |
+| `/api/gdsQueue/enter-queue` | `GdsEnterQueue` | GdsQueueService | 进入队列 |
+| `/api/gdsQueue/exit-queue` | `GdsExitQueue` | GdsQueueService | 退出队列 |
+| `/api/gdsQueue/next-on-queue` | `GdsNextOnQueue` | GdsQueueService | 取队列下一条 |
+| `/api/gdsQueue/queue-agent-list` | `GdsQueueAgentList` | GdsQueueService | 队列坐席列表 |
 
 ---
 
@@ -245,7 +245,7 @@ PNR 元素级的预订操作（Travelport Shared Booking）。
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
 | `/api/terminal/create-terminal-session` | `CreateTerminalSession` | TerminalService | 创建终端会话 |
-| `/api/terminal/terminal` | `Terminal` | TerminalService | 发送终端指令 |
+| `/api/terminal/command` | `Terminal` | TerminalService | 发送终端指令 |
 | `/api/terminal/end-terminal-session` | `EndTerminalSession` | TerminalService | 结束终端会话 |
 
 ---
