@@ -4,7 +4,7 @@
 
 > 本表列出网关对外暴露的全部 HTTP 接口（共 **181** 个）。所有接口均为 `POST`，统一挂在 `/api` 前缀下，请求体为 JSON，响应为上游 SOAP 响应的强类型结构体（snake_case JSON）。
 > 路由命名规则：`POST /api/<域>/<操作>`。
-> 标记为 **别名 → UniversalRecord** 的路由，由产品 Handler 代理到 `UniversalFacade`（详见 [`architecture.md` §4](./architecture.zh-CN.md)），底层走 `UniversalRecordService`。
+> 标记为 **别名 → UniversalRecord** 的路由，由产品 Handler 代理到 `UniversalFacade`（详见 [`architecture.md` §4](./architecture.zh-CN.md)），底层按具体操作的 WSDL 端口绑定选择服务地址和 SOAPAction（例如酒店预订走 `HotelService`）。
 
 图例：
 - **上游服务**：该操作最终调用的 Travelport SOAP Service（`AirService` / `HotelService` / `RailService` / `VehicleService` / `UniversalRecordService` / `UProfileService` / `SharedBookingService` / `GdsQueueService` / `UtilService` / `SystemService` / `TerminalService`）。
@@ -43,8 +43,8 @@
 | `/api/air/emd-issuance` | `EMDIssuance` | AirService | 开具 EMD |
 | `/api/air/emd-retrieve` | `EMDRetrieve` | AirService | 取回 EMD |
 | `/api/air/seat-map` | `SeatMap` | AirService | 座位图 |
-| `/api/air/book` | `AirCreateReservation` | **UniversalRecordService（别名）** | 创建机票预订 |
-| `/api/air/cancel` | `AirCancel` | **UniversalRecordService（别名）** | 取消机票预订 |
+| `/api/air/book` | `AirCreateReservation` | **AirService（别名）** | 创建机票预订 |
+| `/api/air/cancel` | `AirCancel` | **AirService（别名）** | 取消机票预订 |
 
 ---
 
@@ -60,10 +60,10 @@
 | `/api/hotel/keywords` | `Keywords` | HotelService | 关键词 |
 | `/api/hotel/upsell` | `UpsellSearch` | HotelService | 加价搜索 |
 | `/api/hotel/super-shopper` | `SuperShopper` | HotelService | 超值搜索 |
-| `/api/hotel/book` | `HotelCreateReservation` | **UniversalRecordService（别名）** | 创建酒店预订 |
-| `/api/hotel/cancel` | `HotelCancel` | **UniversalRecordService（别名）** | 取消酒店预订 |
+| `/api/hotel/book` | `HotelCreateReservation` | **HotelService（别名）** | 创建酒店预订 |
+| `/api/hotel/cancel` | `HotelCancel` | **HotelService（别名）** | 取消酒店预订 |
 
-> 注：`/api/hotel/search` 与 `/api/hotel/details` 使用显式 DTO 映射（更友好的业务字段），其余为强类型透传。`hotel/book`、`hotel/cancel` 代理到 UniversalRecord（酒店无独立 create/cancel portType）。
+> 注：`/api/hotel/search` 与 `/api/hotel/details` 使用显式 DTO 映射（更友好的业务字段），其余为强类型透传。`hotel/book`、`hotel/cancel` 使用 `UniversalFacade`；请求类型属于 universal 命名空间，对应 WSDL 端口的实际地址是 `HotelService`。
 
 ---
 
@@ -77,7 +77,7 @@
 | `/api/rail/exchange-quote` | `RailExchangeQuote` | RailService | 火车换开报价 |
 | `/api/rail/refund` | `RailRefund` | RailService | 火车退票 |
 | `/api/rail/refund-quote` | `RailRefundQuote` | RailService | 火车退票报价 |
-| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService（别名）** | 创建火车预订（无 `/rail/cancel`，取消见 `/api/universal/record-cancel`） |
+| `/api/rail/book` | `RailCreateReservation` | **RailService（别名）** | 创建火车预订（无 `/rail/cancel`，取消见 `/api/universal/record-cancel`） |
 
 ---
 
@@ -93,8 +93,8 @@
 | `/api/vehicle/retrieve` | `VehicleRetrieve` | VehicleService | 取回租车预订 |
 | `/api/vehicle/keyword` | `VehicleKeyword` | VehicleService | 关键词 |
 | `/api/vehicle/media-links` | `VehicleMediaLinks` | VehicleService | 媒体链接 |
-| `/api/vehicle/book` | `VehicleCreateReservation` | **UniversalRecordService（别名）** | 创建租车预订 |
-| `/api/vehicle/cancel` | `VehicleCancel` | **UniversalRecordService（别名）** | 取消租车预订 |
+| `/api/vehicle/book` | `VehicleCreateReservation` | **VehicleService（别名）** | 创建租车预订 |
+| `/api/vehicle/cancel` | `VehicleCancel` | **VehicleService（别名）** | 取消租车预订 |
 
 ---
 
@@ -104,29 +104,29 @@
 
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
-| `/api/universal/air-create-reservation` | `AirCreateReservation` | UniversalRecordService | 机票创建预订 |
-| `/api/universal/air-cancel` | `AirCancel` | UniversalRecordService | 机票取消 |
-| `/api/universal/air-merchandising-fulfillment` | `AirMerchandisingFulfillment` | UniversalRecordService | 辅营履约 |
-| `/api/universal/hotel-create-reservation` | `HotelCreateReservation` | UniversalRecordService | 酒店创建预订 |
-| `/api/universal/hotel-cancel` | `HotelCancel` | UniversalRecordService | 酒店取消 |
-| `/api/universal/rail-create-reservation` | `RailCreateReservation` | UniversalRecordService | 火车创建预订 |
-| `/api/universal/vehicle-create-reservation` | `VehicleCreateReservation` | UniversalRecordService | 租车创建预订 |
-| `/api/universal/vehicle-cancel` | `VehicleCancel` | UniversalRecordService | 租车取消 |
-| `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | UniversalRecordService | 被动段创建 |
-| `/api/universal/passive-cancel` | `PassiveCancel` | UniversalRecordService | 被动段取消 |
+| `/api/universal/air-create-reservation` | `AirCreateReservation` | AirService | 机票创建预订 |
+| `/api/universal/air-cancel` | `AirCancel` | AirService | 机票取消 |
+| `/api/universal/air-merchandising-fulfillment` | `AirMerchandisingFulfillment` | AirService | 辅营履约 |
+| `/api/universal/hotel-create-reservation` | `HotelCreateReservation` | HotelService | 酒店创建预订 |
+| `/api/universal/hotel-cancel` | `HotelCancel` | HotelService | 酒店取消 |
+| `/api/universal/rail-create-reservation` | `RailCreateReservation` | RailService | 火车创建预订 |
+| `/api/universal/vehicle-create-reservation` | `VehicleCreateReservation` | VehicleService | 租车创建预订 |
+| `/api/universal/vehicle-cancel` | `VehicleCancel` | VehicleService | 租车取消 |
+| `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | PassiveService | 被动段创建 |
+| `/api/universal/passive-cancel` | `PassiveCancel` | PassiveService | 被动段取消 |
 | `/api/universal/record-cancel` | `UniversalRecordCancel` | UniversalRecordService | 统一记录取消（火车取消走这里） |
 | `/api/universal/record-import` | `UniversalRecordImport` | UniversalRecordService | 导入统一记录 |
 | `/api/universal/record-modify` | `UniversalRecordModify` | UniversalRecordService | 统一记录修改 |
 | `/api/universal/record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | 取回统一记录 |
 | `/api/universal/record-search` | `UniversalRecordSearch` | UniversalRecordService | 搜索统一记录 |
-| `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | UniversalRecordService | 供应商预订明细 |
+| `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | ProviderReservationDisplayService | 供应商预订明细 |
 | `/api/universal/provider-reservation-divide` | `ProviderReservationDivide` | UniversalRecordService | 拆分供应商预订 |
-| `/api/universal/ack-schedule-change` | `AckScheduleChange` | UniversalRecordService | 确认航班变动 |
-| `/api/universal/saved-trip-create` | `SavedTripCreate` | UniversalRecordService | 保存行程创建 |
-| `/api/universal/saved-trip-delete` | `SavedTripDelete` | UniversalRecordService | 保存行程删除 |
-| `/api/universal/saved-trip-modify` | `SavedTripModify` | UniversalRecordService | 保存行程修改 |
-| `/api/universal/saved-trip-retrieve` | `SavedTripRetrieve` | UniversalRecordService | 保存行程取回 |
-| `/api/universal/saved-trip-search` | `SavedTripSearch` | UniversalRecordService | 保存行程搜索 |
+| `/api/universal/ack-schedule-change` | `AckScheduleChange` | ScheduleChangeService | 确认航班变动 |
+| `/api/universal/saved-trip-create` | `SavedTripCreate` | SavedTripCreateService | 保存行程创建 |
+| `/api/universal/saved-trip-delete` | `SavedTripDelete` | SavedTripDeleteService | 保存行程删除 |
+| `/api/universal/saved-trip-modify` | `SavedTripModify` | SavedTripModifyService | 保存行程修改 |
+| `/api/universal/saved-trip-retrieve` | `SavedTripRetrieve` | SavedTripRetrieveService | 保存行程取回 |
+| `/api/universal/saved-trip-search` | `SavedTripSearch` | SavedTripSearchService | 保存行程搜索 |
 
 ---
 
@@ -136,8 +136,8 @@ Passive 在 UAPI 中无独立 WSDL / portType，只能经 UniversalRecord 操作
 
 | 路由 | SOAP 操作 | 上游服务 | 说明 |
 |---|---|---|---|
-| `/api/passive/book` | `PassiveCreateReservation` | **UniversalRecordService（别名）** | 被动段创建 |
-| `/api/passive/cancel` | `PassiveCancel` | **UniversalRecordService（别名）** | 被动段取消 |
+| `/api/passive/book` | `PassiveCreateReservation` | **PassiveService（别名）** | 被动段创建 |
+| `/api/passive/cancel` | `PassiveCancel` | **PassiveService（别名）** | 被动段取消 |
 
 ---
 

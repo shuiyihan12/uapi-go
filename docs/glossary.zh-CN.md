@@ -38,7 +38,7 @@
  一次预订的核心记录，包含旅客、航段、联系方式、票价等。传统上靠终端指令（如 `1`/`NM`/`SS`）编辑；本项目的 `sharedBooking` 域提供元素级 REST 操作。
 
 **Universal Record（统一记录，UR）**
- Travelport 用来把**跨产品**（机票 + 酒店 + 火车 + 租车 + 被动段）预订聚合到同一条记录里的机制。创建 / 取消 / 统一修改都走 `UniversalRecordService`。这也是为什么本项目的 `/air/book`、`/hotel/cancel` 等"别名路由"最终落到 `UniversalFacade`（详见 [`architecture.md` §4](./architecture.zh-CN.md)）。
+ Travelport 用来把**跨产品**（机票 + 酒店 + 火车 + 租车 + 被动段）预订聚合到同一条记录里的机制。UR 取回/查询/修改/取消使用 `UniversalRecordService`；产品预订按 WSDL 端口选择实际服务。本项目 `/air/book`、`/hotel/cancel` 等别名共用 `UniversalFacade`（详见 [`architecture.md` §4](./architecture.zh-CN.md)）。
 
 **Provider Reservation（供应商预订）**
  供应商侧对一条 UR 里某段产品的实际预订。本项目有 `provider-reservation-display-details`、`provider-reservation-divide` 等操作。
@@ -47,10 +47,10 @@
  一种"未真正出票 / 仅暂存"的行程草稿，可稍后取回继续处理。对应 `saved-trip-*` 一组操作。
 
 **Passive Segment（被动段）**
- 不在 GDS 里真正预订、只是"记账/备注"的一段（例如非 GDS 渠道订的酒店）。它没有独立 WSDL，只能经 `UniversalRecordService` 的 `Passive*` 操作创建 / 取消。本项目用 `passive` 域代理。
+ 不在 GDS 里真正预订、只是"记账/备注"的一段（例如非 GDS 渠道订的酒店）。预订类型和端口定义在 universal WSDL 中，`Passive*` 创建/取消实际发往 `PassiveService`。本项目用 `passive` 域代理。
 
 **CreateReservation / Cancel（创建预订 / 取消）**
- 各产品的"落地预订"动作。注意机票/酒店/火车/租车的 create/cancel **不在各自产品 Service，而在 UniversalRecordService**（如 `AirCreateReservation`、`HotelCancel`），所以本项目把它们做成产品别名路由。
+ 各产品的"落地预订"动作。请求类型位于 universal schema，WSDL 将操作绑定到各产品服务端点（例如 `HotelCreateReservation` → `HotelService`）。UR 级取消使用 `UniversalRecordService`。
 
 ---
 

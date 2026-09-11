@@ -4,7 +4,7 @@
 
 > This table lists every HTTP endpoint the gateway exposes (**181** in total). All endpoints are `POST`, mounted under the `/api` prefix, with JSON request bodies; responses are strongly typed structs of the upstream SOAP responses (snake_case JSON).
 > Route naming rule: `POST /api/<domain>/<operation>`.
-> Routes marked **alias → UniversalRecord** are proxied by the product handler to `UniversalFacade` (see [`architecture.md` §4](./architecture.md)) and hit `UniversalRecordService` underneath.
+> Routes marked **alias → UniversalRecord** are proxied by the product handler to `UniversalFacade` (see [`architecture.md` §4](./architecture.md)) and select the physical endpoint and SOAPAction from the operation’s WSDL port binding (hotel booking uses `HotelService`).
 
 Legend:
 - **Upstream service**: the Travelport SOAP service the operation ultimately calls (`AirService` / `HotelService` / `RailService` / `VehicleService` / `UniversalRecordService` / `UProfileService` / `SharedBookingService` / `GdsQueueService` / `UtilService` / `SystemService` / `TerminalService`).
@@ -43,8 +43,8 @@ Legend:
 | `/api/air/emd-issuance` | `EMDIssuance` | AirService | issue EMD |
 | `/api/air/emd-retrieve` | `EMDRetrieve` | AirService | retrieve EMD |
 | `/api/air/seat-map` | `SeatMap` | AirService | seat map |
-| `/api/air/book` | `AirCreateReservation` | **UniversalRecordService (alias)** | create air booking |
-| `/api/air/cancel` | `AirCancel` | **UniversalRecordService (alias)** | cancel air booking |
+| `/api/air/book` | `AirCreateReservation` | **AirService (alias)** | create air booking |
+| `/api/air/cancel` | `AirCancel` | **AirService (alias)** | cancel air booking |
 
 ---
 
@@ -60,10 +60,10 @@ Legend:
 | `/api/hotel/keywords` | `Keywords` | HotelService | keywords |
 | `/api/hotel/upsell` | `UpsellSearch` | HotelService | upsell search |
 | `/api/hotel/super-shopper` | `SuperShopper` | HotelService | super shopper search |
-| `/api/hotel/book` | `HotelCreateReservation` | **UniversalRecordService (alias)** | create hotel booking |
-| `/api/hotel/cancel` | `HotelCancel` | **UniversalRecordService (alias)** | cancel hotel booking |
+| `/api/hotel/book` | `HotelCreateReservation` | **HotelService (alias)** | create hotel booking |
+| `/api/hotel/cancel` | `HotelCancel` | **HotelService (alias)** | cancel hotel booking |
 
-> Note: `/api/hotel/search` and `/api/hotel/details` use generated types directly (friendlier business fields); the rest are strongly typed pass-throughs. `hotel/book` and `hotel/cancel` proxy to UniversalRecord (hotel has no standalone create/cancel portType).
+> Note: `/api/hotel/search` and `/api/hotel/details` use generated types directly (friendlier business fields); the rest are strongly typed pass-throughs. `hotel/book` and `hotel/cancel` use `UniversalFacade`; their request types are in the universal namespace, while their WSDL ports are hosted by `HotelService`.
 
 ---
 
@@ -77,7 +77,7 @@ Legend:
 | `/api/rail/exchange-quote` | `RailExchangeQuote` | RailService | rail exchange quote |
 | `/api/rail/refund` | `RailRefund` | RailService | rail refund |
 | `/api/rail/refund-quote` | `RailRefundQuote` | RailService | rail refund quote |
-| `/api/rail/book` | `RailCreateReservation` | **UniversalRecordService (alias)** | create rail booking (no `/rail/cancel`; cancellation goes through `/api/universal/record-cancel`) |
+| `/api/rail/book` | `RailCreateReservation` | **RailService (alias)** | create rail booking (no `/rail/cancel`; cancellation goes through `/api/universal/record-cancel`) |
 
 ---
 
@@ -93,8 +93,8 @@ Legend:
 | `/api/vehicle/retrieve` | `VehicleRetrieve` | VehicleService | retrieve vehicle booking |
 | `/api/vehicle/keyword` | `VehicleKeyword` | VehicleService | keywords |
 | `/api/vehicle/media-links` | `VehicleMediaLinks` | VehicleService | media links |
-| `/api/vehicle/book` | `VehicleCreateReservation` | **UniversalRecordService (alias)** | create vehicle booking |
-| `/api/vehicle/cancel` | `VehicleCancel` | **UniversalRecordService (alias)** | cancel vehicle booking |
+| `/api/vehicle/book` | `VehicleCreateReservation` | **VehicleService (alias)** | create vehicle booking |
+| `/api/vehicle/cancel` | `VehicleCancel` | **VehicleService (alias)** | cancel vehicle booking |
 
 ---
 
@@ -104,29 +104,29 @@ Cross-product create / cancel / unified modify / saved trips / passive segments 
 
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
-| `/api/universal/air-create-reservation` | `AirCreateReservation` | UniversalRecordService | create air booking |
-| `/api/universal/air-cancel` | `AirCancel` | UniversalRecordService | cancel air |
-| `/api/universal/air-merchandising-fulfillment` | `AirMerchandisingFulfillment` | UniversalRecordService | ancillary fulfillment |
-| `/api/universal/hotel-create-reservation` | `HotelCreateReservation` | UniversalRecordService | create hotel booking |
-| `/api/universal/hotel-cancel` | `HotelCancel` | UniversalRecordService | cancel hotel |
-| `/api/universal/rail-create-reservation` | `RailCreateReservation` | UniversalRecordService | create rail booking |
-| `/api/universal/vehicle-create-reservation` | `VehicleCreateReservation` | UniversalRecordService | create vehicle booking |
-| `/api/universal/vehicle-cancel` | `VehicleCancel` | UniversalRecordService | cancel vehicle |
-| `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | UniversalRecordService | create passive segment |
-| `/api/universal/passive-cancel` | `PassiveCancel` | UniversalRecordService | cancel passive segment |
+| `/api/universal/air-create-reservation` | `AirCreateReservation` | AirService | create air booking |
+| `/api/universal/air-cancel` | `AirCancel` | AirService | cancel air |
+| `/api/universal/air-merchandising-fulfillment` | `AirMerchandisingFulfillment` | AirService | ancillary fulfillment |
+| `/api/universal/hotel-create-reservation` | `HotelCreateReservation` | HotelService | create hotel booking |
+| `/api/universal/hotel-cancel` | `HotelCancel` | HotelService | cancel hotel |
+| `/api/universal/rail-create-reservation` | `RailCreateReservation` | RailService | create rail booking |
+| `/api/universal/vehicle-create-reservation` | `VehicleCreateReservation` | VehicleService | create vehicle booking |
+| `/api/universal/vehicle-cancel` | `VehicleCancel` | VehicleService | cancel vehicle |
+| `/api/universal/passive-create-reservation` | `PassiveCreateReservation` | PassiveService | create passive segment |
+| `/api/universal/passive-cancel` | `PassiveCancel` | PassiveService | cancel passive segment |
 | `/api/universal/record-cancel` | `UniversalRecordCancel` | UniversalRecordService | cancel universal record (rail cancellation goes here) |
 | `/api/universal/record-import` | `UniversalRecordImport` | UniversalRecordService | import universal record |
 | `/api/universal/record-modify` | `UniversalRecordModify` | UniversalRecordService | modify universal record |
 | `/api/universal/record-retrieve` | `UniversalRecordRetrieve` | UniversalRecordService | retrieve universal record |
 | `/api/universal/record-search` | `UniversalRecordSearch` | UniversalRecordService | search universal records |
-| `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | UniversalRecordService | provider reservation details |
+| `/api/universal/provider-reservation-display-details` | `ProviderReservationDisplayDetails` | ProviderReservationDisplayService | provider reservation details |
 | `/api/universal/provider-reservation-divide` | `ProviderReservationDivide` | UniversalRecordService | divide provider reservation |
-| `/api/universal/ack-schedule-change` | `AckScheduleChange` | UniversalRecordService | acknowledge schedule change |
-| `/api/universal/saved-trip-create` | `SavedTripCreate` | UniversalRecordService | create saved trip |
-| `/api/universal/saved-trip-delete` | `SavedTripDelete` | UniversalRecordService | delete saved trip |
-| `/api/universal/saved-trip-modify` | `SavedTripModify` | UniversalRecordService | modify saved trip |
-| `/api/universal/saved-trip-retrieve` | `SavedTripRetrieve` | UniversalRecordService | retrieve saved trip |
-| `/api/universal/saved-trip-search` | `SavedTripSearch` | UniversalRecordService | search saved trips |
+| `/api/universal/ack-schedule-change` | `AckScheduleChange` | ScheduleChangeService | acknowledge schedule change |
+| `/api/universal/saved-trip-create` | `SavedTripCreate` | SavedTripCreateService | create saved trip |
+| `/api/universal/saved-trip-delete` | `SavedTripDelete` | SavedTripDeleteService | delete saved trip |
+| `/api/universal/saved-trip-modify` | `SavedTripModify` | SavedTripModifyService | modify saved trip |
+| `/api/universal/saved-trip-retrieve` | `SavedTripRetrieve` | SavedTripRetrieveService | retrieve saved trip |
+| `/api/universal/saved-trip-search` | `SavedTripSearch` | SavedTripSearchService | search saved trips |
 
 ---
 
@@ -136,8 +136,8 @@ Passive has no standalone WSDL / portType in UAPI and is only reachable via Univ
 
 | Route | SOAP operation | Upstream service | Notes |
 |---|---|---|---|
-| `/api/passive/book` | `PassiveCreateReservation` | **UniversalRecordService (alias)** | create passive segment |
-| `/api/passive/cancel` | `PassiveCancel` | **UniversalRecordService (alias)** | cancel passive segment |
+| `/api/passive/book` | `PassiveCreateReservation` | **PassiveService (alias)** | create passive segment |
+| `/api/passive/cancel` | `PassiveCancel` | **PassiveService (alias)** | cancel passive segment |
 
 ---
 

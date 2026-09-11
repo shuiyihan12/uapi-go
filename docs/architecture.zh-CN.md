@@ -15,7 +15,7 @@
 这套接口能力强，但直接对接有三个痛点：
 
 1. **协议重**：SOAP Envelope、命名空间 URI、`xs:sequence` 顺序、枚举值都要手写对齐，出错即报文失败。
-2. **范围分散**：同一个产品的"查询"在 `AirService`，而"预订 / 取消"却在 `UniversalRecordService`（见 §4），新手极易找错入口。
+2. **命名空间与端点不同**：产品预订类型可定义在 universal schema 中，但端口部署在产品服务上，必须按 WSDL 绑定选择地址（见 §4）。
 3. **契约易变**：Travelport 按版本交付 WSDL/XSD，字段和枚举会随版本变化。
 
 本项目把 UAPI 的这些 SOAP 操作封装成一个 **Go 编写的 REST / JSON 网关**：
@@ -185,14 +185,16 @@ JSON 契约影响（破坏性，随迁移生效）：请求/响应字段以 XSD 
 
 ## 4. 路由与职责边界：每个服务只管自己范围内的事
 
-Travelport 的原生设计里，**"查询 / 检索 / 改签 / 退票"在产品自己的 Service 里，而"跨产品的创建预订 / 取消 / 统一修改"在 `UniversalRecordService` 里**。例如：
+Travelport 的 XML 命名空间组织请求/响应类型，WSDL 的 service port 决定实际请求地址。`UniversalRecord.wsdl` 同时包含部署在多个服务上的端口：
 
-- `AirService` 有 `AirSearch`、`AirPrice`、`AirTicketing`、`AirExchange`…… 但**没有** `AirCreateReservation` / `AirCancel`。
-- 机票的"创建预订"和"取消"是 `UniversalRecordService` 的 `AirCreateReservation` / `AirCancel`。
-- 同理，酒店、火车、租车的创建 / 取消也都在 `UniversalRecordService`。
-- `UniversalRecordService` 还提供 `UniversalRecordCreate`/`Cancel`/`Modify`/`Retrieve`/`Search`、`SavedTrip*`、`ProviderReservation*`、`Passive*` 等跨产品统一能力。
+- `HotelCreateReservation`、`HotelCancel` 使用 `HotelService`。
+- 机票、租车、火车及被动段预订使用各自的产品服务。
+- `UniversalRecordRetrieve/Search/Import/Modify/Cancel` 和 `ProviderReservationDivide` 使用 `UniversalRecordService`。
+- SavedTrip、航变确认、供应商预订展示分别使用 WSDL 指定的独立服务。
 
-本项目严格遵循这一边界：
+`pkg/services/universal/routing.go` 按操作选择地址和 SOAPAction；并发调用共享连接池，但不修改共享路由状态。
+
+本项目通过公共 facade 暴露这些操作：
 
 - **产品 Handler**（air / rail / hotel / vehicle）只暴露该产品"自己范围内"的查询与操作。
 - **跨产品的预订 / 取消**统一由 `UniversalRecord` 引擎（`pkg/usecase.UniversalFacade`）承载。
@@ -204,26 +206,29 @@ flowchart LR
     b["POST /api/air/cancel"] -->|别名代理| u2["UniversalFacade.AirCancel"]
     h["POST /api/hotel/book"] -->|别名代理| u3["UniversalFacade.HotelCreateReservation"]
     p["POST /api/passive/book"] -->|别名代理| u4["UniversalFacade.PassiveCreateReservation"]
-    u --> ur["UniversalRecordService (SOAP)"]
+    u --> air["AirService (SOAP)"]
+    u2 --> air
+    u3 --> hotel["HotelService (SOAP)"]
+    u4 --> passive["PassiveService (SOAP)"]
 ```
 
 别名路由一览（共 9 条，全部代理到 `UniversalFacade`）：
 
 | 别名路由 | 实际调用（SOAP 操作） | 上游 Service |
 |---|---|---|
-| `POST /api/air/book` | `AirCreateReservation` | `UniversalRecordService` |
-| `POST /api/air/cancel` | `AirCancel` | `UniversalRecordService` |
-| `POST /api/hotel/book` | `HotelCreateReservation` | `UniversalRecordService` |
-| `POST /api/hotel/cancel` | `HotelCancel` | `UniversalRecordService` |
-| `POST /api/rail/book` | `RailCreateReservation` | `UniversalRecordService` |
-| `POST /api/vehicle/book` | `VehicleCreateReservation` | `UniversalRecordService` |
-| `POST /api/vehicle/cancel` | `VehicleCancel` | `UniversalRecordService` |
-| `POST /api/passive/book` | `PassiveCreateReservation` | `UniversalRecordService` |
-| `POST /api/passive/cancel` | `PassiveCancel` | `UniversalRecordService` |
+| `POST /api/air/book` | `AirCreateReservation` | `AirService` |
+| `POST /api/air/cancel` | `AirCancel` | `AirService` |
+| `POST /api/hotel/book` | `HotelCreateReservation` | `HotelService` |
+| `POST /api/hotel/cancel` | `HotelCancel` | `HotelService` |
+| `POST /api/rail/book` | `RailCreateReservation` | `RailService` |
+| `POST /api/vehicle/book` | `VehicleCreateReservation` | `VehicleService` |
+| `POST /api/vehicle/cancel` | `VehicleCancel` | `VehicleService` |
+| `POST /api/passive/book` | `PassiveCreateReservation` | `PassiveService` |
+| `POST /api/passive/cancel` | `PassiveCancel` | `PassiveService` |
 
 > 注意 **rail 没有 `/rail/cancel`**：火车段的取消在 Travelport 里走 `UniversalRecordCancel`（统一记录级取消），因此不提供产品级别名，直接调用 `POST /api/universal/record-cancel`。
 >
-> `passive`（被动段）在 UAPI 里**没有独立的 WSDL / portType**，只能经由 `UniversalRecordService` 操作；本项目为此单独建了 `PassiveHandler`，把 `/passive/book`、`/passive/cancel` 代理到 `UniversalFacade`。
+> `passive`（被动段）预订类型和端口定义在 universal WSDL 中，实际端点为 `PassiveService`；`PassiveHandler` 把 `/passive/book`、`/passive/cancel` 代理到 `UniversalFacade`。
 
 完整路由见 [`routing.md`](./routing.zh-CN.md)。
 

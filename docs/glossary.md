@@ -38,7 +38,7 @@
  The core record of one booking: passengers, segments, contacts, fares. Traditionally edited via terminal commands (like `1`/`NM`/`SS`); this project's `sharedBooking` domain offers element-level REST operations.
 
 **Universal Record (UR)**
- Travelport's mechanism for aggregating **cross-product** bookings (air + hotel + rail + vehicle + passive segments) into one record. Create / cancel / unified modify all go through `UniversalRecordService`. That is why this project's `/air/book`, `/hotel/cancel` etc. "alias routes" land in `UniversalFacade` (see [`architecture.md` §4](./architecture.md)).
+ Travelport's mechanism for aggregating **cross-product** bookings (air + hotel + rail + vehicle + passive segments) into one record. UR retrieve/search/modify/cancel use `UniversalRecordService`; product booking operations use the endpoint in their WSDL port binding. Product aliases such as `/air/book` and `/hotel/cancel` share `UniversalFacade` (see [`architecture.md` §4](./architecture.md)).
 
 **Provider Reservation**
  The provider-side actual booking of one product segment inside a UR. This project exposes `provider-reservation-display-details`, `provider-reservation-divide` and friends.
@@ -47,10 +47,10 @@
  An itinerary draft that is "not actually ticketed / temporarily stored" and can be retrieved later to continue. Maps to the `saved-trip-*` operation group.
 
 **Passive Segment**
- A segment not actually booked in the GDS, kept purely for accounting/notation (e.g. a hotel booked outside GDS channels). It has no standalone WSDL and can only be created / cancelled via `UniversalRecordService`'s `Passive*` operations. This project proxies it through the `passive` domain.
+ A segment not actually booked in the GDS, kept purely for accounting/notation (e.g. a hotel booked outside GDS channels). Its booking types and ports are defined in the universal WSDL; `Passive*` creation/cancellation uses the `PassiveService` endpoint. This project proxies it through the `passive` domain.
 
 **CreateReservation / Cancel**
- Each product's "commit the booking" action. Note that air/hotel/rail/vehicle create/cancel **live not in the product's own service but in UniversalRecordService** (e.g. `AirCreateReservation`, `HotelCancel`), hence this project's product alias routes.
+ Each product's "commit the booking" action. The types live in the universal schema, but the WSDL binds these operations to product service endpoints (e.g. `HotelCreateReservation` → `HotelService`). UR-level cancellation uses `UniversalRecordService`.
 
 ---
 

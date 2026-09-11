@@ -15,7 +15,7 @@
 The interface is powerful, but integrating directly has three pain points:
 
 1. **Heavy protocol**: SOAP envelopes, namespace URIs, `xs:sequence` ordering and enumeration values all have to be hand-aligned; one mistake and the payload fails.
-2. **Scattered surface**: a product's "search" lives in `AirService` while "book / cancel" lives in `UniversalRecordService` (see §4) — newcomers easily knock on the wrong door.
+2. **Namespace and endpoint differ**: product booking types can live in the universal schema while their ports are hosted by product services. Route by the WSDL binding, not the generated package name (see §4).
 3. **Moving contract**: Travelport ships WSDL/XSD by version; fields and enums shift across versions.
 
 This project wraps those SOAP operations into a **REST / JSON gateway written in Go**:
@@ -185,14 +185,16 @@ JSON contract impact (breaking, effective with the migration): request/response 
 
 ## 4. Routing and responsibility boundaries: each service owns its own scope
 
-In Travelport's native design, **"search / retrieve / exchange / refund" live in the product's own service, while "cross-product booking create / cancel / unified modify" live in `UniversalRecordService`**. For example:
+Travelport’s XML namespace groups request/response types; a WSDL service port defines the physical endpoint. `UniversalRecord.wsdl` contains ports hosted by several services:
 
-- `AirService` has `AirSearch`, `AirPrice`, `AirTicketing`, `AirExchange`… but **no** `AirCreateReservation` / `AirCancel`.
-- Air "create booking" and "cancel" are `UniversalRecordService`'s `AirCreateReservation` / `AirCancel`.
-- Likewise, hotel / rail / vehicle booking create & cancel all live in `UniversalRecordService`.
-- `UniversalRecordService` additionally provides cross-product unified capabilities: `UniversalRecordCreate`/`Cancel`/`Modify`/`Retrieve`/`Search`, `SavedTrip*`, `ProviderReservation*`, `Passive*`, etc.
+- `HotelCreateReservation` and `HotelCancel` use `HotelService`.
+- Air, vehicle, rail and passive booking operations use their respective product services.
+- `UniversalRecordRetrieve/Search/Import/Modify/Cancel` and `ProviderReservationDivide` use `UniversalRecordService`.
+- SavedTrip, schedule-change and provider-display operations use the individual service addresses in the WSDL.
 
-This project follows that boundary strictly:
+`pkg/services/universal/routing.go` selects the endpoint and SOAPAction per operation; concurrent calls share the connection pool without mutating routing state.
+
+This project exposes these operations through a common facade:
 
 - **Product handlers** (air / rail / hotel / vehicle) expose only that product's in-scope queries and operations.
 - **Cross-product booking / cancel** is carried by the UniversalRecord engine (`pkg/usecase.UniversalFacade`).
@@ -204,26 +206,29 @@ flowchart LR
     b["POST /api/air/cancel"] -->|alias proxy| u2["UniversalFacade.AirCancel"]
     h["POST /api/hotel/book"] -->|alias proxy| u3["UniversalFacade.HotelCreateReservation"]
     p["POST /api/passive/book"] -->|alias proxy| u4["UniversalFacade.PassiveCreateReservation"]
-    u --> ur["UniversalRecordService (SOAP)"]
+    u --> air["AirService (SOAP)"]
+    u2 --> air
+    u3 --> hotel["HotelService (SOAP)"]
+    u4 --> passive["PassiveService (SOAP)"]
 ```
 
 Alias routes (9 in total, all proxying to `UniversalFacade`):
 
 | Alias route | Actual call (SOAP operation) | Upstream service |
 |---|---|---|
-| `POST /api/air/book` | `AirCreateReservation` | `UniversalRecordService` |
-| `POST /api/air/cancel` | `AirCancel` | `UniversalRecordService` |
-| `POST /api/hotel/book` | `HotelCreateReservation` | `UniversalRecordService` |
-| `POST /api/hotel/cancel` | `HotelCancel` | `UniversalRecordService` |
-| `POST /api/rail/book` | `RailCreateReservation` | `UniversalRecordService` |
-| `POST /api/vehicle/book` | `VehicleCreateReservation` | `UniversalRecordService` |
-| `POST /api/vehicle/cancel` | `VehicleCancel` | `UniversalRecordService` |
-| `POST /api/passive/book` | `PassiveCreateReservation` | `UniversalRecordService` |
-| `POST /api/passive/cancel` | `PassiveCancel` | `UniversalRecordService` |
+| `POST /api/air/book` | `AirCreateReservation` | `AirService` |
+| `POST /api/air/cancel` | `AirCancel` | `AirService` |
+| `POST /api/hotel/book` | `HotelCreateReservation` | `HotelService` |
+| `POST /api/hotel/cancel` | `HotelCancel` | `HotelService` |
+| `POST /api/rail/book` | `RailCreateReservation` | `RailService` |
+| `POST /api/vehicle/book` | `VehicleCreateReservation` | `VehicleService` |
+| `POST /api/vehicle/cancel` | `VehicleCancel` | `VehicleService` |
+| `POST /api/passive/book` | `PassiveCreateReservation` | `PassiveService` |
+| `POST /api/passive/cancel` | `PassiveCancel` | `PassiveService` |
 
 > Note **rail has no `/rail/cancel`**: rail-segment cancellation goes through `UniversalRecordCancel` (record-level cancel) in Travelport, so no product-level alias exists — call `POST /api/universal/record-cancel` directly.
 >
-> `passive` (passive segments) has **no standalone WSDL / portType** in UAPI and can only be reached through `UniversalRecordService`; the project provides a dedicated `PassiveHandler` proxying `/passive/book` and `/passive/cancel` to `UniversalFacade`.
+> `passive` booking request types and ports are defined in the universal WSDL, with physical endpoint `PassiveService`; `PassiveHandler` proxies `/passive/book` and `/passive/cancel` to `UniversalFacade`.
 
 Full routing in [`routing.md`](./routing.md).
 
