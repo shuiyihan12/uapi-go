@@ -1,5 +1,6 @@
-// Package universal provides the SOAP client implementation for the Travelport Universal
-// service (the air-mapped namespace).
+// Package universal provides the SOAP client implementation for Travelport's
+// universal namespace (the air-mapped types). Physical endpoints follow each
+// WSDL port: hotel bookings use HotelService, UR operations UniversalRecordService.
 // Its UniversalServicePort interface corresponds one-to-one with the WSDL *PortType operations.
 // Request/response types come directly from the generator-produced air package
 // (script generated; do not edit by hand).
@@ -262,7 +263,14 @@ func (s *UniversalService) VehicleCreateReservation(ctx context.Context, req *ai
 // that performs a single SOAP call and decodes it into the strongly typed
 // response T.
 func callPort[T any](c *client.EnterpriseSOAPClient, ctx context.Context, operation string, req any) (*T, error) {
-	return client.CallPortType[T](c, ctx, operation, req)
+	service, err := operationService(operation)
+	if err != nil {
+		return nil, err
+	}
+	// Every port in this WSDL uses its service URI as SOAPAction. Scope the
+	// endpoint to this call so concurrent hotel/UR calls cannot change each other.
+	scoped := c.WithServiceEndpoint(service, "http://localhost:8080/kestrel/"+service)
+	return client.CallPortType[T](scoped, ctx, operation, req)
 }
 
 // Close closes the underlying SOAP client connection and releases its resources.

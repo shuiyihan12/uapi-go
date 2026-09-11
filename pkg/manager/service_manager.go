@@ -352,6 +352,8 @@ func serviceSuffix(key string) (string, error) {
 	case "rail":
 		return "RailService", nil
 	case "universal":
+		// Constructor default only. The universal adapter selects the physical
+		// service and SOAPAction for each operation from its WSDL port binding.
 		return "UniversalRecordService", nil
 	case "cruise":
 		return "CruiseService", nil
