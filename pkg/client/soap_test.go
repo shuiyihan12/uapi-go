@@ -3,9 +3,11 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,8 +15,63 @@ import (
 
 	"github.com/shuiyihan12/uapi-go/pkg/generated/common55"
 	"github.com/shuiyihan12/uapi-go/pkg/generated/hotel"
+	"github.com/shuiyihan12/uapi-go/pkg/logging"
 	"github.com/shuiyihan12/uapi-go/pkg/requestctx"
 )
+
+type responseTransportFunc func(*http.Request) (*http.Response, error)
+
+func (f responseTransportFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
+
+// An upstream gateway can return an HTML 404 page with HTTP 200. This must
+// not be misreported as an empty SOAP Body or silently retried.
+func TestHTMLResponseWithHTTP200IsNotAnEmptySOAPBody(t *testing.T) {
+	const endpoint = "https://apac.universal-api.travelport.com/B2BGateway/connect/uAPI/UniversalRecordService"
+	const html = `<!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title></head><body><h1>HTTP Status 404 – Not Found</h1></body></html>`
+	var logs bytes.Buffer
+	calls := 0
+	client, err := NewSOAPClient(SOAPConfig{
+		ServiceName: "UniversalRecordService",
+		Logger:      logging.NewStdLogAdapter(log.New(&logs, "", 0)),
+		Transport: responseTransportFunc(func(req *http.Request) (*http.Response, error) {
+			calls++
+			if req.URL.String() != endpoint {
+				t.Errorf("unexpected direct GDS endpoint: %s", req.URL)
+			}
+			return &http.Response{StatusCode: http.StatusOK, Status: "200 OK", Request: req,
+				Header: http.Header{"Content-Type": []string{"text/html;charset=utf-8"}},
+				Body:   io.NopCloser(strings.NewReader(html))}, nil
+		}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	_, err = client.Call(requestctx.WithRegion(context.Background(), "apac"), "UniversalRecordRetrieve", testSOAPRequest{})
+	if err == nil || !strings.Contains(err.Error(), "non-SOAP response") || !strings.Contains(err.Error(), `root="html"`) || strings.Contains(err.Error(), "body is empty") {
+		t.Fatalf("misleading response error: %v", err)
+	}
+	for _, want := range []string{"http_status=200", "content_type=text/html", "endpoint=" + endpoint, "HTTP Status 404"} {
+		if !strings.Contains(logs.String(), want) {
+			t.Errorf("missing HTTP response evidence: %s", want)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("unexpected automatic retry: %d calls", calls)
+	}
+}
+
+func TestExtractSOAPBodyDistinguishesNonSOAPAndEmptyEnvelope(t *testing.T) {
+	for _, tc := range []struct{ body, errorText string }{
+		{`<html><body>404</body></html>`, "non-SOAP response"},
+		{`<html><Body><Response/></Body></html>`, "non-SOAP response"},
+		{`<SOAP:Envelope xmlns:SOAP="http://schemas.xmlsoap.org/soap/envelope/"><SOAP:Body/></SOAP:Envelope>`, "SOAP response body is empty"},
+	} {
+		if _, err := extractSOAPBody([]byte(tc.body)); err == nil || !strings.Contains(err.Error(), tc.errorText) {
+			t.Errorf("wanted %q, got %v", tc.errorText, err)
+		}
+	}
+}
 
 // testSOAPRequest is a minimal request body used to verify envelope
 // serialization.

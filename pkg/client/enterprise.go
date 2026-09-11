@@ -60,6 +60,19 @@ func NewEnterpriseSOAPClient(config EnterpriseConfig) (*EnterpriseSOAPClient, er
 	}, nil
 }
 
+// WithServiceEndpoint returns an immutable view for a WSDL port's physical
+// service and SOAPAction. It shares the HTTP client/connection pool, timeouts,
+// logger and metrics, but never changes the shared client's routing fields.
+// A single generated namespace can contain ports hosted by different services.
+func (c *EnterpriseSOAPClient) WithServiceEndpoint(serviceName, soapAction string) *EnterpriseSOAPClient {
+	soap := *c.SOAPClient
+	soap.serviceName = serviceName
+	soap.soapAction = soapAction
+	scoped := *c
+	scoped.SOAPClient = &soap
+	return &scoped
+}
+
 // CallWithObservability performs one SOAP call with metrics collection and
 // leveled logging (no retries).
 //

@@ -9,6 +9,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"regexp"
@@ -43,7 +44,8 @@ type SOAPClient struct {
 // soapResponseEnvelope parses only the raw XML of the SOAP envelope Body and
 // leaves further deserialization to the caller.
 type soapResponseEnvelope struct {
-	Body struct {
+	XMLName xml.Name
+	Body    struct {
 		Contents []byte `xml:",innerxml"`
 	} `xml:"Body"`
 }
@@ -299,17 +301,30 @@ func (c *SOAPClient) Call(ctx context.Context, action string, request interface{
 	if err != nil {
 		return nil, fmt.Errorf("failed to read SOAP response: %v", err)
 	}
+	responseEndpoint := endpoint
+	if httpRsp.Request != nil && httpRsp.Request.URL != nil {
+		// http.Client may follow redirects; retain the final destination as well
+		// as the original destination already present in the request log.
+		responseEndpoint = httpRsp.Request.URL.String()
+	}
+	contentType, _, _ := mime.ParseMediaType(httpRsp.Header.Get("Content-Type"))
 	if httpRsp.StatusCode < http.StatusOK || httpRsp.StatusCode >= http.StatusMultipleChoices {
 		logger.Error("GDS SOAP call returned non-2xx",
 			zap.String("operation", action),
-			zap.String("status", httpRsp.Status))
+			zap.String("status", httpRsp.Status),
+			zap.Int("http_status", httpRsp.StatusCode),
+			zap.String("content_type", contentType),
+			zap.String("endpoint", responseEndpoint))
 		return nil, fmt.Errorf("SOAP call failed with HTTP %s: %s", httpRsp.Status, string(responseBody))
 	}
 
-	logger.Raw(fmt.Sprintf("[GDS RESPONSE] operation=%s trace_id=%s\n%s", action, traceID, string(responseBody)))
+	logger.Raw(fmt.Sprintf("[GDS RESPONSE] operation=%s trace_id=%s http_status=%d content_type=%s endpoint=%s\n%s", action, traceID, httpRsp.StatusCode, contentType, responseEndpoint, string(responseBody)))
 
 	bodyContents, err := extractSOAPBody(responseBody)
 	if err != nil {
+		if _, isFault := err.(*SOAPFaultError); !isFault {
+			return nil, fmt.Errorf("SOAP response parse failed (http_status=%d, content_type=%q): %w", httpRsp.StatusCode, contentType, err)
+		}
 		return nil, err
 	}
 
@@ -548,6 +563,9 @@ func extractSOAPBody(responseBody []byte) ([]byte, error) {
 	var envelope soapResponseEnvelope
 	if err := decoder.Decode(&envelope); err != nil {
 		return nil, fmt.Errorf("failed to parse SOAP envelope: %v", err)
+	}
+	if envelope.XMLName.Local != "Envelope" {
+		return nil, fmt.Errorf("received non-SOAP response: root=%q, expected SOAP Envelope", envelope.XMLName.Local)
 	}
 	if len(bytes.TrimSpace(envelope.Body.Contents)) == 0 {
 		return nil, fmt.Errorf("SOAP response body is empty")
