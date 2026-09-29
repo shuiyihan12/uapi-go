@@ -129,7 +129,7 @@ Go 是静态编译语言，本项目**不在运行时加载或解析 XSD**。上
 | 系统 / 终端 | `system` / `terminal` / `sessioncontext` | 探活、终端仿真会话 |
 | 其他 | `gdsqueue` / `cruise` / `passive` | GDS 队列 / 邮轮 / 被动段 |
 
-> 甲方升级契约时：替换 / 新增 `wsdl/` 目录 → 重跑 `./scripts/build.sh wsdl` → `./scripts/build.sh all` → 提交 `pkg/generated` 与适配层 diff。**不要手工改 `pkg/generated/`**。
+> 甲方升级契约时：替换 / 新增 `wsdl/` 目录 → 重跑 `make wsdl` → `make all` → 提交 `pkg/generated` 与适配层 diff。**不要手工改 `pkg/generated/`**。
 
 ### 3.2 为什么 `air` 是合并包，`universal` 只剩枚举（重要）
 
@@ -299,8 +299,8 @@ flowchart TD
     A["收到甲方新版 WSDL/XSD 目录"] --> B["归档到 wsdl/服务_版本"]
     B --> C["检查 xsd:include / xsd:import 引用完整"]
     C --> D["更新 scripts 中的 XSD 清单"]
-    D --> E["./scripts/build.sh wsdl (重新生成)"]
-    E --> F["./scripts/build.sh all (生成+构建+测试+lint)"]
+    D --> E["make wsdl (重新生成)"]
+    E --> F["make all (生成+构建+测试+lint)"]
     F --> G["检查 pkg/generated diff 与适配层映射"]
     G --> H["提交代码"]
 ```
@@ -310,7 +310,7 @@ flowchart TD
 - 确认交付目录完整（含所有 `include` / `import`）。
 - 目录放入 `wsdl/`，名字带服务与版本号。
 - 更新生成脚本的 XSD 清单。
-- 执行 `./scripts/build.sh wsdl` 与 `./scripts/build.sh all`。
+- 执行 `make wsdl` 与 `make all`。
 - 对需暴露给 REST 的字段，在 `pkg/usecase` 与 `pkg/services` 显式接入。
 - 更新 `docs/` 中对应接口说明。
 
@@ -331,7 +331,8 @@ uapi-go/
   internal/          日志、指标等内部基础设施
   wsdl/              上游 WSDL/XSD 契约（按服务 / 版本归档）
   tools/airxsdgen/   代码生成器
-  scripts/           构建 / 生成 / 启动脚本
+  Makefile           构建 / 测试 / lint / 启动的统一入口
+  scripts/           专用生成脚本
   docs/              架构、路由、术语文档
 ```
 

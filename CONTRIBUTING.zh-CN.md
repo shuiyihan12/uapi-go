@@ -15,23 +15,23 @@
 ```bash
 # 1. 克隆并安装依赖
 git clone <your-fork-url> && cd uapi-go
-./scripts/build.sh deps
+make deps
 
 # 2. 开发迭代（按需）
-./scripts/build.sh build     # 构建
-./scripts/build.sh test      # 测试
-./scripts/build.sh lint      # gofmt 检查 + go vet
+make build     # 构建
+make test      # 测试
+make lint      # gofmt 检查 + go vet
 
 # 3. 提交 PR 前的完整校验（生成 + 构建 + 测试 + lint）
-./scripts/build.sh all
+make all
 ```
 
 PR 检查清单：
 
-- [ ] `./scripts/build.sh all` 全绿
+- [ ] `make all` 全绿
 - [ ] 行为变更附有测试证据（命令与输出）或示例请求/响应
 - [ ] 新增接口同步更新了 `docs/routing.md`（路由 ↔ SOAP 操作对照表）
-- [ ] `pkg/generated/` 只有经 `./scripts/build.sh wsdl` 产生的变更（绝不手改）
+- [ ] `pkg/generated/` 只有经 `make wsdl` 产生的变更（绝不手改）
 
 ## 3. 代码规范
 
@@ -62,7 +62,7 @@ Regenerate WSDL client code for v54 contracts
 
 ## 6. 契约（WSDL/XSD）升级
 
-上游契约变更必须走构建期重新生成，流程见 [`docs/architecture.md` §6](./docs/architecture.md)：归档 `wsdl/` → 更新生成清单 → `./scripts/build.sh wsdl` → `all` → 人工审查 `pkg/generated` diff。
+上游契约变更必须走构建期重新生成，流程见 [`docs/architecture.md` §6](./docs/architecture.md)：归档 `wsdl/` → 更新生成清单 → `make wsdl` → `all` → 人工审查 `pkg/generated` diff。
 
 ## 7. 许可
 

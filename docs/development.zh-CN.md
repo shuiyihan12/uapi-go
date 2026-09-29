@@ -84,7 +84,7 @@ registerPortHandler(mux, apiBasePath+"/air/air-xxx", f.AirXxx)
 
 - `docs/routing.md`：对应域的表格加一行（路由 | SOAP 操作 | 上游服务 | 说明），并更新该域与合计的路由数
 - 如涉及非平凡的字段映射或校验，补表驱动测试（参考 `pkg/services/system/system_test.go` 的 Marshal 断言写法）
-- `./scripts/build.sh all` 全绿后提交
+- `make all` 全绿后提交
 
 ---
 
@@ -93,7 +93,7 @@ registerPortHandler(mux, apiBasePath+"/air/air-xxx", f.AirXxx)
 以接入新域 `foo`（WSDL 已交付）为例，改动集中在六处：
 
 1. **归档契约**：WSDL/XSD 放入 `wsdl/foo_vNN_0/`，确认 `include`/`import` 引用完整
-2. **生成结构体**：更新 `tools/airxsdgen` 的输入清单（若需新增 schema 文件）→ `./scripts/build.sh wsdl` → 产出 `pkg/generated/foo/`（单版本域用无版本包名；仅 common 系多版本并存保留版本号）
+2. **生成结构体**：更新 `tools/airxsdgen` 的输入清单（若需新增 schema 文件）→ `make wsdl` → 产出 `pkg/generated/foo/`（单版本域用无版本包名；仅 common 系多版本并存保留版本号）
 3. **services 层**：新建 `pkg/services/foo/service.go`——定义 `FooServicePort` 接口（与 WSDL 的 *PortType 一一对应）+ `FooService` 实现（构造 `client.EnterpriseSOAPClient`，每个方法 `prepareReq` + `callPort`），参考 `pkg/services/rail/service.go`（小域样板）
 4. **manager 注册**：`pkg/manager/service_manager.go` 两处——`buildServiceFactories` 加一条工厂项、`serviceSuffix` 加 `case "foo": return "FooService", nil`（未知键会显式报错，漏配会在首次调用时暴露）
 5. **usecase + api 层**：新建 `pkg/usecase/foo_facade.go` 与 `pkg/api/foo_handler.go`（样板同场景 A），并在 `cmd/daemon/main.go` 装配：`NewFooFacade` → `NewFooHandler(...).RegisterRoutes(mux)`
@@ -107,8 +107,8 @@ registerPortHandler(mux, apiBasePath+"/air/air-xxx", f.AirXxx)
 
 ```bash
 # 新契约归档进 wsdl/ 后：
-./scripts/build.sh wsdl   # 重新生成 pkg/generated
-./scripts/build.sh all    # 构建 + 测试 + lint
+make wsdl   # 重新生成 pkg/generated
+make all    # 构建 + 测试 + lint
 git diff --stat pkg/generated/   # 人工审查生成代码 diff（字段增删、类型变化）
 ```
 
@@ -137,7 +137,7 @@ git diff --stat pkg/generated/   # 人工审查生成代码 diff（字段增删�
 | 不做重试 | GDS 写操作（出票/预订）不幂等，任何失败直接透出，由调用方决定补偿 |
 | 错误模型 | 上游业务/系统错误经 `*client.SOAPFaultError` 透出；`pkg/api.writeError` 按 `ErrorInfo/Type` 统一映射 400/422/502/504。中间层不要吞错或转成字符串 |
 | trace_id 全链路 | `trace.Ensure(ctx)` 自动生成 UUID 并贯穿 HTTP 头、日志、SOAP 报文；新代码不要自造追踪 ID |
-| 生成代码禁改 | `pkg/generated/` 只能经 `./scripts/build.sh wsdl` 再生 |
+| 生成代码禁改 | `pkg/generated/` 只能经 `make wsdl` 再生 |
 | 严格 JSON | 请求解码 `DisallowUnknownFields`；新接口的请求字段命名 snake_case，与生成类型的 json tag 对齐 |
 | 注释风格 | 中文文档注释，导出符号必须注释"做什么、为什么" |
 
@@ -167,7 +167,7 @@ go test ./test/... -run TestServiceManager -v   # 真实上游集成路径
 
 ```bash
 set -a && source .env && set +a
-go run ./cmd/daemon          # 默认 :8080，业务与 /health、/metrics 同端口
+make dev                     # 默认 :8080，业务与 /health、/metrics 同端口
 
 curl -X POST http://localhost:8080/api/system/ping \
   -H "Authorization: Basic xxxx" \

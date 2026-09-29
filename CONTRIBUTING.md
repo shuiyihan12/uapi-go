@@ -15,23 +15,23 @@ Thanks for considering a contribution to uapi-go! This is a Go project wrapping 
 ```bash
 # 1. Clone and install dependencies
 git clone <your-fork-url> && cd uapi-go
-./scripts/build.sh deps
+make deps
 
 # 2. Iterate (as needed)
-./scripts/build.sh build     # build
-./scripts/build.sh test      # test
-./scripts/build.sh lint      # gofmt check + go vet
+make build     # build
+make test      # test
+make lint      # gofmt check + go vet
 
 # 3. Full verification before opening a PR (generation + build + test + lint)
-./scripts/build.sh all
+make all
 ```
 
 PR checklist:
 
-- [ ] `./scripts/build.sh all` fully green
+- [ ] `make all` fully green
 - [ ] Behavior changes come with test evidence (commands and output) or sample requests/responses
 - [ ] New endpoints updated `docs/routing.md` (the route ↔ SOAP operation table)
-- [ ] `pkg/generated/` contains only changes produced by `./scripts/build.sh wsdl` (never hand-edited)
+- [ ] `pkg/generated/` contains only changes produced by `make wsdl` (never hand-edited)
 
 ## 3. Code style
 
@@ -62,7 +62,7 @@ One commit does one thing (generation, service logic, docs and tooling are commi
 
 ## 6. Contract (WSDL/XSD) upgrades
 
-Upstream contract changes must go through build-time regeneration; see [`docs/architecture.md` §6](./docs/architecture.md) for the process: archive under `wsdl/` → update the generation manifest → `./scripts/build.sh wsdl` → `all` → manually review the `pkg/generated` diff.
+Upstream contract changes must go through build-time regeneration; see [`docs/architecture.md` §6](./docs/architecture.md) for the process: archive under `wsdl/` → update the generation manifest → `make wsdl` → `all` → manually review the `pkg/generated` diff.
 
 ## 7. License
 

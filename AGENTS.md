@@ -13,18 +13,18 @@ This repository is a Go SDK / REST gateway for Travelport UAPI.
 - `internal/`: internal-only infrastructure (`logging`, `metrics`).
 - `tools/airxsdgen/`: XSD→Go struct generator (regenerates `pkg/generated`).
 - `wsdl/`: upstream WSDL/XSD inputs.
-- `scripts/`: build/generation tooling.
+- `scripts/`: WSDL/XSD generation tooling.
 - `test/`: current integration-style tests (for service manager behavior).
 - `docs/`: architecture, routing map, glossary.
 - `Dockerfile`, `docker-compose.yml`, `deploy/k8s/`, `cmd/healthcheck/`: container build & deployment assets (distroless nonroot runtime image).
 
 ## Build, Test, and Development Commands
-- `./scripts/build.sh deps`: tidy and download Go dependencies.
-- `./scripts/build.sh wsdl`: regenerate all WSDL client code.
-- `./scripts/build.sh build`: build binaries into `bin/`.
-- `./scripts/build.sh test`: run test suite (`go test ./test/...`).
-- `./scripts/build.sh lint`: run formatting check + `go vet`.
-- `./scripts/build.sh all`: full pipeline (deps, generation, build, test, lint).
+- `make deps`: tidy and download Go dependencies.
+- `make wsdl`: regenerate all WSDL client code.
+- `make build`: build binaries into `bin/`.
+- `make test`: run test suite (`go test ./test/...`).
+- `make lint`: run formatting check + `go vet`.
+- `make all`: full pipeline (deps, generation, build, test, lint).
 - `go test ./test/manager_test.go -v`: run focused tests.
 - `go test ./test/manager_test.go -bench=.`: run benchmarks.
 
@@ -38,7 +38,7 @@ This repository is a Go SDK / REST gateway for Travelport UAPI.
 - Primary framework: Go `testing` package.
 - Place tests in `*_test.go`; prefer table-driven tests for service logic.
 - Name tests as `TestXxx` and benchmarks as `BenchmarkXxx`.
-- Before opening a PR, run at least `./scripts/build.sh test` and `./scripts/build.sh lint`.
+- Before opening a PR, run at least `make test` and `make lint`.
 
 ## Commit & Pull Request Guidelines
 - Follow the existing conventional-commit style (e.g. `feat(trace): propagate caller X-Trace-Id header`); keep the subject short and imperative.

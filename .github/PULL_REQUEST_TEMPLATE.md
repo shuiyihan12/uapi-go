@@ -8,10 +8,10 @@
 
 ## Checklist
 
-- [ ] `./scripts/build.sh all` fully green (CI must pass)
+- [ ] `make all` fully green (CI must pass)
 - [ ] Behavior changes come with test evidence (commands and output) or sample requests/responses
 - [ ] New endpoints updated `docs/routing.md` (and the README capability table)
-- [ ] `pkg/generated/` contains only changes produced by `./scripts/build.sh wsdl`
+- [ ] `pkg/generated/` contains only changes produced by `make wsdl`
 - [ ] Comments and docs follow the English-default convention (`*.zh-CN.md` counterparts updated when applicable)
 
 ## Domain ownership

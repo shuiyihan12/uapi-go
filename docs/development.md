@@ -84,7 +84,7 @@ Naming rule: routes are kebab-case (`air-xxx`), mapping 1:1 to the method name (
 
 - `docs/routing.md`: add a row to the domain's table (route | SOAP operation | upstream service | notes) and update the domain and total route counts
 - For non-trivial field mappings or validation, add table-driven tests (see the Marshal assertions in `pkg/services/system/system_test.go`)
-- Commit after `./scripts/build.sh all` is fully green
+- Commit after `make all` is fully green
 
 ---
 
@@ -93,7 +93,7 @@ Naming rule: routes are kebab-case (`air-xxx`), mapping 1:1 to the method name (
 Onboarding a new domain `foo` (WSDL delivered) concentrates changes in six places:
 
 1. **Archive the contract**: put the WSDL/XSD under `wsdl/foo_vNN_0/` and confirm `include`/`import` references are complete
-2. **Generate structs**: update the input manifest in `tools/airxsdgen` (if new schema files are needed) → `./scripts/build.sh wsdl` → produces `pkg/generated/foo/` (single-version domains get versionless package names; only the common family keeps versions)
+2. **Generate structs**: update the input manifest in `tools/airxsdgen` (if new schema files are needed) → `make wsdl` → produces `pkg/generated/foo/` (single-version domains get versionless package names; only the common family keeps versions)
 3. **Services layer**: create `pkg/services/foo/service.go` — define the `FooServicePort` interface (1:1 with the WSDL's *PortType) plus the `FooService` implementation (constructs a `client.EnterpriseSOAPClient`; each method is `prepareReq` + `callPort`), modeled on `pkg/services/rail/service.go` (small-domain template)
 4. **Manager registration**: two spots in `pkg/manager/service_manager.go` — add a factory entry to `buildServiceFactories`, and add `case "foo": return "FooService", nil` to `serviceSuffix` (unknown keys error explicitly, so a missed entry surfaces on first call)
 5. **Usecase + api layers**: create `pkg/usecase/foo_facade.go` and `pkg/api/foo_handler.go` (templates as in scenario A), and wire them in `cmd/daemon/main.go`: `NewFooFacade` → `NewFooHandler(...).RegisterRoutes(mux)`
@@ -107,8 +107,8 @@ Full process in [`architecture.md` §6](./architecture.md). Essentials:
 
 ```bash
 # After archiving the new contract into wsdl/:
-./scripts/build.sh wsdl   # regenerate pkg/generated
-./scripts/build.sh all    # build + test + lint
+make wsdl   # regenerate pkg/generated
+make all    # build + test + lint
 git diff --stat pkg/generated/   # manually review the generated diff (added/removed fields, type changes)
 ```
 
@@ -137,7 +137,7 @@ When pass-through is not enough (multi-step SOAP calls, input validation, friend
 | No retries | GDS write operations (ticketing/booking) are not idempotent; every failure surfaces directly and the caller decides compensation |
 | Error model | upstream business/system errors surface as `*client.SOAPFaultError`; `pkg/api.writeError` maps them uniformly to 400/422/502/504 by `ErrorInfo/Type`. Never swallow errors or stringify them in intermediate layers |
 | trace_id end-to-end | `trace.Ensure(ctx)` generates a UUID automatically and threads it through HTTP headers, logs and SOAP payloads; do not invent your own tracking IDs in new code |
-| Generated code is untouchable | `pkg/generated/` regenerates only via `./scripts/build.sh wsdl` |
+| Generated code is untouchable | `pkg/generated/` regenerates only via `make wsdl` |
 | Strict JSON | request decoding uses `DisallowUnknownFields`; new endpoint request fields are snake_case, aligned with the generated types' json tags |
 | Comment style | English doc comments; exported symbols must document "what and why" |
 
@@ -167,7 +167,7 @@ go test ./test/... -run TestServiceManager -v   # real-upstream integration path
 
 ```bash
 set -a && source .env && set +a
-go run ./cmd/daemon          # default :8080; business shares the port with /health, /metrics
+make dev                     # default :8080; business shares the port with /health, /metrics
 
 curl -X POST http://localhost:8080/api/system/ping \
   -H "Authorization: Basic xxxx" \

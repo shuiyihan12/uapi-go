@@ -71,12 +71,12 @@ flowchart TD
 
 | 你想做的事 | 命令 |
 |---|---|
-| 安装 / 更新依赖 | `./scripts/build.sh deps`（`go mod tidy` + `go mod download`） |
-| 重新生成 Go struct | `./scripts/build.sh wsdl`（运行 `tools/airxsdgen`） |
-| 构建全部命令 | `./scripts/build.sh build` |
-| 启动服务 | `./scripts/start-daemon.sh`（或开发期 `go run ./cmd/daemon`） |
+| 安装 / 更新依赖 | `make deps`（`go mod tidy` + `go mod download`） |
+| 重新生成 Go struct | `make wsdl`（运行 `tools/airxsdgen`） |
+| 构建全部命令 | `make build` |
+| 启动服务 | `make run`（或开发期 `go run ./cmd/daemon`） |
 | 容器化构建与运行 | `docker compose up -d --build`（详见 [§6 容器化部署](#6-启动与配置)） |
-| 全量校验 | `./scripts/build.sh all`（生成 + 构建 + 测试 + lint） |
+| 全量校验 | `make all`（生成 + 构建 + 测试 + lint） |
 
 > 重新生成 Go struct 用的是**脚本**（`tools/airxsdgen`），按 `targetNamespace` 把 `wsdl/` 下的 XSD 自动翻译成 Go struct，**不要手工改 `pkg/generated/`**。
 
@@ -114,11 +114,11 @@ hotel, err := c.Hotel() // 每个域一个强类型服务；懒加载、带缓�
 ## 5. 初始化、构建与测试
 
 ```bash
-./scripts/build.sh deps      # 安装和整理依赖
-./scripts/build.sh wsdl      # 重新生成 WSDL 代码
-./scripts/build.sh build     # 构建所有命令
-./scripts/build.sh test      # 运行测试
-./scripts/build.sh all       # 全量验证
+make deps      # 安装和整理依赖
+make wsdl      # 重新生成 WSDL 代码
+make build     # 构建所有命令
+make test      # 运行测试
+make all       # 全量验证
 ```
 
 当前使用 Go `1.25.0`。生成器按命名空间拆分为独立 Go 包；**包名不带版本号**（`air`、`hotel`…），契约升级（如 v55→v56）时 import 路径保持稳定，仅 `commonNN` 系因多版本并存而保留版本号；枚举在 `enums` 子包。因 `air↔rail↔universal` 相互递归引用，三者合并为 `air`，`universal` 仅保留枚举（详见 [`docs/architecture.md` §3.2](./docs/architecture.zh-CN.md)）。当前上游契约版本为 **v55_0**（11 个核心域；system/terminal/uprofile 等仍为各自的历史版本）。
@@ -129,17 +129,16 @@ hotel, err := c.Hotel() // 每个域一个强类型服务；懒加载、带缓�
 
 ```bash
 # 构建（自动清理 bin/ 中不在构建清单的陈旧可执行文件）
-./scripts/build.sh build
+make build
 
 # 复制并编辑 .env（已提供默认模板 .env.example）
 vim .env
 
 # 用 .env 启动 daemon（默认 API 端口 8080，业务与运维端点共用）
-./scripts/start-daemon.sh
+make run
 
 # 或开发调试直接跑源码
-set -a && source .env && set +a
-go run ./cmd/daemon
+make dev
 ```
 
 启动规则：
@@ -231,7 +230,13 @@ kubectl apply -f deploy/k8s/
 
 安全基线：非根用户（uid 65532）、只读根文件系统、`allowPrivilegeEscalation=false`、丢弃全部 Linux capabilities、seccomp RuntimeDefault。
 
-### 6.2 容量规划
+### 6.2 Cloudflare
+
+当前服务是完整的 Go HTTP 进程，不能直接作为普通 JavaScript Worker 运行。如果你的 Cloudflare 账号提供 **Workers with Containers**，可以通过 Cloudflare 的容器流程部署现有 Docker 镜像。镜像启动 `/uapi-daemon` 并监听 `8080`，本仓库不依赖 Node.js 工具链。
+
+本仓库有意不内置 Wrangler 或 Worker 适配层；具体构建和部署命令取决于账号启用的 Cloudflare 容器流程。如果控制台只提供普通 Worker，应先把 Go 容器部署到容器平台，再让 Cloudflare 负责 DNS、代理和 TLS。生产环境的 `UAPI_*` 参数配置在容器环境中，`Authorization` 和 `X-UAPI-Region` 仍由调用方按请求头传入。
+
+### 6.3 容量规划
 
 网关无状态、可水平扩展；单节点容量瓶颈在**内存而非线程**——Go goroutine 让"等待"几乎零成本。
 真正会依次撞到的限制，按先后顺序：
@@ -284,7 +289,8 @@ uapi-go/
   internal/          日志、指标等内部基础设施
   wsdl/              上游 WSDL/XSD 契约（按服务 / 版本归档；版权归 Travelport，见 LICENSE 说明）
   tools/airxsdgen/   代码生成器
-  scripts/           构建 / 生成 / 启动脚本
+  Makefile           构建 / 测试 / lint / 启动的统一入口
+  scripts/           专用生成脚本
   docs/              架构、路由、术语、二次开发文档
   deploy/k8s/        Kubernetes 部署清单（Deployment / Service / Secret 示例）
   docker/            容器配套配置（Prometheus 抓取等）

@@ -129,7 +129,7 @@ Go packages per WSDL/XSD family (excerpt; versions shift with upstream deliverie
 | System / Terminal | `system` / `terminal` / `sessioncontext` | health ping, terminal emulation sessions |
 | Others | `gdsqueue` / `cruise` / `passive` | GDS queues / cruise / passive segments |
 
-> When Travelport upgrades the contract: replace / add the `wsdl/` directory → rerun `./scripts/build.sh wsdl` → `./scripts/build.sh all` → commit the `pkg/generated` and adapter diffs. **Never hand-edit `pkg/generated/`**.
+> When Travelport upgrades the contract: replace / add the `wsdl/` directory → rerun `make wsdl` → `make all` → commit the `pkg/generated` and adapter diffs. **Never hand-edit `pkg/generated/`**.
 
 ### 3.2 Why `air` is a merged package and `universal` only has enums (important)
 
@@ -299,8 +299,8 @@ flowchart TD
     A["Receive new WSDL/XSD delivery"] --> B["Archive under wsdl/service_version"]
     B --> C["Check xsd:include / xsd:import reference completeness"]
     C --> D["Update the XSD manifest in scripts"]
-    D --> E["./scripts/build.sh wsdl (regenerate)"]
-    E --> F["./scripts/build.sh all (generate+build+test+lint)"]
+    D --> E["make wsdl (regenerate)"]
+    E --> F["make all (generate+build+test+lint)"]
     F --> G["Review pkg/generated diff and adapter mappings"]
     G --> H["Commit"]
 ```
@@ -310,7 +310,7 @@ Checklist per upgrade:
 - Confirm the delivered directory is complete (all `include` / `import`).
 - Place the directory under `wsdl/`, named with service and version.
 - Update the generator's XSD manifest.
-- Run `./scripts/build.sh wsdl` and `./scripts/build.sh all`.
+- Run `make wsdl` and `make all`.
 - Explicitly wire fields that need REST exposure in `pkg/usecase` and `pkg/services`.
 - Update the relevant endpoint docs under `docs/`.
 
@@ -331,7 +331,8 @@ uapi-go/
   internal/          internal infrastructure (logging, metrics)
   wsdl/              upstream WSDL/XSD contracts (archived by service / version)
   tools/airxsdgen/   code generator
-  scripts/           build / generation / startup scripts
+  Makefile           canonical build / test / lint / startup entrypoints
+  scripts/           specialized generation scripts
   docs/              architecture, routing, glossary docs
 ```
 
