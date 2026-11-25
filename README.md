@@ -158,6 +158,7 @@ Optional UAPI parameters and defaults:
 | `UAPI_MAX_IDLE_CONNS` | no | `100` | max idle keep-alive connections kept warm across all upstream hosts |
 | `UAPI_MAX_IDLE_CONNS_PER_HOST` | no | `100` | max idle keep-alive connections per host (capped by `UAPI_MAX_IDLE_CONNS`) |
 | `UAPI_SKIP_TLS_VERIFY` | no | unset (verify certificates) | set to `1` only for private environments (self-signed certificates); keep unset in production |
+| `UAPI_USER_AGENT` | no | unset (header omitted) | outbound SOAP `User-Agent`, forwarded verbatim. `.env.example` ships `YourBrand-GDS-Engine/2.1.0` (format: `<company>-<service>/<version>`); no hardcoded default in code |
 
 > `Authorization` and `X-UAPI-Region` are not configured via environment variables; callers send them in every request header — see "Request headers" below.
 
@@ -168,6 +169,10 @@ Request headers (every business request):
 | `Authorization` | yes | Travelport auth header, e.g. `Basic xxx` / `Bearer xxx`; forwarded verbatim to UAPI |
 | `X-UAPI-Region` | no | region: `americas` / `apac` / `emea` (Production only, case-insensitive); falls back to the `UAPI_ENDPOINT` default when absent — invalid values are ignored with a warning log |
 | `X-Trace-Id` | no | caller-supplied global trace ID for this request; auto-generated (UUID v4) when absent. Propagated through logs, outbound HTTP headers and (only when the body's `TraceId` is empty) as a fallback into the body's `TraceId` attribute; the actual trace_id used is echoed back in a response header |
+
+Outbound SOAP headers (set by `pkg/client` on every call): `Content-Type: text/xml;charset=UTF-8`, `SOAPAction: ""` (present but empty, required by B2BGateway), `Cache-Control: no-cache`, `Pragma: no-cache`, `Connection: keep-alive`, plus the caller's `Authorization` and `X-Trace-Id`. `User-Agent` is configuration-driven: sent only when `UAPI_USER_AGENT` is set, otherwise omitted entirely.
+
+Each SOAP operation logs `SOAP operation completed successfully` (or a failure entry) with `trace_id`, `service`, `operation` and `duration` — the full `CallWithObservability` span from request start through response parsing.
 
 Example:
 

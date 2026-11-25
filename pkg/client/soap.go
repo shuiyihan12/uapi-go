@@ -35,10 +35,10 @@ type SOAPClient struct {
 	httpClient   *http.Client
 	baseEndpoint string // default endpoint prefix (UAPI_ENDPOINT or the apac production environment); used when no region is specified
 	serviceName  string // UAPI SOAP service name (e.g. AirService), appended to the endpoint
-	timeout      time.Duration
 	transport    http.RoundTripper
 	logger       logging.Logger
 	soapAction   string
+	userAgent    string
 }
 
 // soapResponseEnvelope parses only the raw XML of the SOAP envelope Body and
@@ -176,11 +176,13 @@ type SOAPConfig struct {
 	// self-signed certificates; never implicitly tied to Environment.
 	SkipTLSVerify bool
 	Logger        logging.Logger
-	// SOAPAction is optional; when empty, no SOAPAction HTTP header is set.
+	// SOAPAction is always emitted; B2BGateway expects a present-but-empty
+	// value. A non-empty value is only for legacy servers requiring WSDL action.
 	SOAPAction string
-	// Transport is optional; when nil, NewSOAPClient creates the default
-	// transport from the timeout/TLS settings. Mainly used to inject a
-	// capturing transport in tests.
+	// UserAgent is optional; empty omits the header.
+	UserAgent string
+	// Transport is optional; when nil, NewSOAPClient builds the default one
+	// from the timeout/TLS settings. Used to inject mock transports in tests.
 	Transport http.RoundTripper
 }
 
@@ -227,10 +229,10 @@ func NewSOAPClient(config SOAPConfig) (*SOAPClient, error) {
 		httpClient:   httpClient,
 		baseEndpoint: config.BaseEndpoint,
 		serviceName:  config.ServiceName,
-		timeout:      config.Timeout,
 		transport:    transport,
 		logger:       config.Logger,
 		soapAction:   config.SOAPAction,
+		userAgent:    config.UserAgent,
 	}, nil
 }
 
@@ -279,9 +281,13 @@ func (c *SOAPClient) Call(ctx context.Context, action string, request interface{
 	}
 	httpReq.Header.Set("Accept", "text/xml")
 	httpReq.Header.Set("Content-Type", "text/xml;charset=UTF-8")
-	if c.soapAction != "" {
-		httpReq.Header.Set("SOAPAction", c.soapAction)
+	httpReq.Header.Set("SOAPAction", c.soapAction)
+	if c.userAgent != "" {
+		httpReq.Header.Set("User-Agent", c.userAgent)
 	}
+	httpReq.Header.Set("Cache-Control", "no-cache")
+	httpReq.Header.Set("Pragma", "no-cache")
+	httpReq.Header.Set("Connection", "keep-alive")
 	// Forward the caller's Travelport auth header verbatim (same semantics
 	// as the Java SDK's AuthenticationConfigurer).
 	if authorization != "" {

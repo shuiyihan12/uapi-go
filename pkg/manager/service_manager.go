@@ -92,6 +92,10 @@ type ServiceConfig struct {
 	// SOAP transport (client.Metrics); nil disables instrumentation.
 	Metrics client.Metrics
 
+	// UserAgent is the outbound SOAP User-Agent from UAPI_USER_AGENT.
+	// Empty means no User-Agent header is sent.
+	UserAgent string
+
 	// Logging configuration. Logger optionally injects a ready-made logger
 	// (pkg/logging) used by the manager and every service it creates; when
 	// nil, one is built from LogLevel/IsDevelopment.
@@ -262,6 +266,7 @@ func (m *ServiceManager) createSOAPConfig(serviceName string) (client.SOAPConfig
 		MaxIdleConnsPerHost: m.config.MaxIdleConnsPerHost,
 		Metrics:             m.config.Metrics,
 		SkipTLSVerify:       m.config.SkipTLSVerify,
+		UserAgent:           m.config.UserAgent,
 	}, nil
 }
 

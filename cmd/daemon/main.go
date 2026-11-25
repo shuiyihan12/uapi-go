@@ -69,6 +69,7 @@ func main() {
 	// environments (self-signed certificates) explicitly skip it via
 	// UAPI_SKIP_TLS_VERIFY=1.
 	config.SkipTLSVerify = envBool("UAPI_SKIP_TLS_VERIFY")
+	config.UserAgent = envString("UAPI_USER_AGENT", config.UserAgent)
 
 	// Create the service manager.
 	serviceManager, err := manager.NewServiceManager(config)
@@ -184,6 +185,9 @@ func main() {
 	log.Printf("Stats:             GET  http://localhost:%s/stats", *port)
 	log.Printf("Prometheus:        GET  http://localhost:%s/metrics", *port)
 	log.Printf("Business APIs:     POST http://localhost:%s/api/{domain}/{op}", *port)
+	if config.UserAgent != "" {
+		log.Printf("User-Agent:        %s", config.UserAgent)
+	}
 
 	// Block until SIGINT/SIGTERM. Health checks are pull-based (initiated by
 	// the probing caller); there is no periodic in-process probing —

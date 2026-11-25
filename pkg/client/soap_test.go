@@ -128,6 +128,60 @@ func TestAuthorizationPassedThroughFromContext(t *testing.T) {
 	}
 }
 
+// TestStandardOutboundSOAPHeaders verifies the fixed B2BGateway header set:
+// SOAPAction must be present even when empty, and the caching/long-connection
+// headers must be explicit.
+func TestStandardOutboundSOAPHeaders(t *testing.T) {
+	base := &captureTransport{}
+	client, err := NewSOAPClient(SOAPConfig{
+		BaseEndpoint: "https://example.com/uAPI",
+		ServiceName:  "HotelService",
+		Transport:    base,
+		UserAgent:    "TINGLV-GOSDK-v0.55.5",
+	})
+	if err != nil {
+		t.Fatalf("new SOAP client: %v", err)
+	}
+	if _, err := client.Call(context.Background(), "TestOperation", testSOAPRequest{}); err != nil {
+		t.Fatalf("call: %v", err)
+	}
+	for header, want := range map[string]string{
+		"Accept":        "text/xml",
+		"Content-Type":  "text/xml;charset=UTF-8",
+		"User-Agent":    "TINGLV-GOSDK-v0.55.5",
+		"Cache-Control": "no-cache",
+		"Pragma":        "no-cache",
+		"Connection":    "keep-alive",
+	} {
+		if got := base.header.Get(header); got != want {
+			t.Errorf("unexpected %s header: got %q, want %q", header, got, want)
+		}
+	}
+	if values, ok := base.header["Soapaction"]; !ok || len(values) != 1 || values[0] != "" {
+		t.Errorf("SOAPAction must be present and empty, got %q (present=%v)", values, ok)
+	}
+}
+
+// TestEmptyUserAgentOmitsHeader verifies that no User-Agent is injected when
+// configuration leaves it empty (no hardcoded fallback in code).
+func TestEmptyUserAgentOmitsHeader(t *testing.T) {
+	base := &captureTransport{}
+	client, err := NewSOAPClient(SOAPConfig{
+		BaseEndpoint: "https://example.com/uAPI",
+		ServiceName:  "HotelService",
+		Transport:    base,
+	})
+	if err != nil {
+		t.Fatalf("new SOAP client: %v", err)
+	}
+	if _, err := client.Call(context.Background(), "TestOperation", testSOAPRequest{}); err != nil {
+		t.Fatalf("call: %v", err)
+	}
+	if values, ok := base.header["User-Agent"]; ok {
+		t.Errorf("User-Agent must be omitted when unconfigured, got %q", values)
+	}
+}
+
 // TestResolveEndpointUsesRegion verifies that the region takes precedence
 // when building the Production endpoint.
 func TestResolveEndpointUsesRegion(t *testing.T) {

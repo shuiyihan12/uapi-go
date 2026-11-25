@@ -267,9 +267,11 @@ func callPort[T any](c *client.EnterpriseSOAPClient, ctx context.Context, operat
 	if err != nil {
 		return nil, err
 	}
-	// Every port in this WSDL uses its service URI as SOAPAction. Scope the
-	// endpoint to this call so concurrent hotel/UR calls cannot change each other.
-	scoped := c.WithServiceEndpoint(service, "http://localhost:8080/kestrel/"+service)
+	// Travelport B2BGateway expects a present-but-empty SOAPAction; the
+	// localhost URIs in the bundled WSDL are stale and must not be sent.
+	// Scope the endpoint per call so concurrent hotel/UR calls cannot change
+	// each other.
+	scoped := c.WithServiceEndpoint(service, "")
 	return client.CallPortType[T](scoped, ctx, operation, req)
 }
 

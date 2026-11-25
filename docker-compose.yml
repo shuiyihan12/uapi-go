@@ -33,6 +33,9 @@ services:
       # commented out in production.
       # UAPI_SKIP_TLS_VERIFY: "1"
       UAPI_ENDPOINT: ${UAPI_ENDPOINT:-https://apac.universal-api.travelport.com/B2BGateway/connect/uAPI}
+      # No code default: empty value means the SOAP UA header is omitted.
+      # The real value lives in .env (copied from .env.example).
+      UAPI_USER_AGENT: ${UAPI_USER_AGENT:-}
     env_file:
       - path: .env
         required: false

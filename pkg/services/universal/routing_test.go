@@ -165,8 +165,10 @@ func TestEveryUniversalOperationUsesItsWSDLPort(t *testing.T) {
 				if got, want := req.URL.String(), base+"/"+route.Service; got != want {
 					return nil, fmt.Errorf("%s: URL %s, WSDL requires %s", route.Operation, got, want)
 				}
-				if req.Header.Get("SOAPAction") != route.Action {
-					return nil, fmt.Errorf("%s: SOAPAction differs from WSDL", route.Operation)
+				// B2BGateway requires the SOAPAction header to be present but
+				// empty; the WSDL's localhost URI is stale and never sent.
+				if values, ok := req.Header["Soapaction"]; !ok || len(values) != 1 || values[0] != "" {
+					return nil, fmt.Errorf("%s: SOAPAction must be present and empty, got %q (present=%v)", route.Operation, values, ok)
 				}
 				if req.Header.Get("Authorization") != "Basic test-only" || req.Header.Get("X-Trace-Id") != "route-"+route.Operation || root.Trace != req.Header.Get("X-Trace-Id") {
 					return nil, fmt.Errorf("%s: credentials/trace lost", route.Operation)

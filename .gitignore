@@ -11,6 +11,9 @@
 .vscode/
 .claude/
 .zcode/
+.workbuddy/
+.codex/
+.qwen/
 
 # Go build artifacts
 bin/

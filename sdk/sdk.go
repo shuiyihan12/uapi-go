@@ -125,6 +125,12 @@ func WithTLSSkipVerify(skip bool) Option {
 	return func(c *manager.ServiceConfig) { c.SkipTLSVerify = skip }
 }
 
+// WithUserAgent sets the outbound SOAP User-Agent. When unset (or set to ""),
+// no User-Agent header is sent.
+func WithUserAgent(userAgent string) Option {
+	return func(c *manager.ServiceConfig) { c.UserAgent = userAgent }
+}
+
 // Air returns the cached Air service (lazily created).
 func (c *Client) Air() (*airservice.AirService, error) {
 	return manager.Get[*airservice.AirService](c.mgr, "air")

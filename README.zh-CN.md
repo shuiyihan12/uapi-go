@@ -158,6 +158,7 @@ make dev
 | `UAPI_MAX_IDLE_CONNS` | 否 | `100` | 全部上游主机合计保温的空闲 keep-alive 连接上限 |
 | `UAPI_MAX_IDLE_CONNS_PER_HOST` | 否 | `100` | 单主机保温的空闲 keep-alive 连接上限（受 `UAPI_MAX_IDLE_CONNS` 封顶） |
 | `UAPI_SKIP_TLS_VERIFY` | 否 | 未设置（校验证书） | 仅私有环境（自签名证书）设为 `1`；生产务必保持未设置 |
+| `UAPI_USER_AGENT` | 否 | 未设置（不发送该头） | 出站 SOAP 的 `User-Agent`，原样透传。`.env.example` 中给出 `YourBrand-GDS-Engine/2.1.0`（格式：`<公司标识>-<服务名称>/<版本号>`），代码里无默认值 |
 
 > `Authorization` 与 `X-UAPI-Region` 不在环境变量里配置，而是由调用方在每个请求头携带，见下方「请求头」。
 
@@ -168,6 +169,10 @@ make dev
 | `Authorization` | 是 | Travelport 鉴权头，如 `Basic xxx` / `Bearer xxx`，原样透传给 UAPI |
 | `X-UAPI-Region` | 否 | 区域：`americas` / `apac` / `emea`（仅 Production，大小写不敏感）；不填则用 `UAPI_ENDPOINT` 默认端点，非法值将被忽略并记录告警日志 |
 | `X-Trace-Id` | 否 | 调用方指定的本次请求全局追踪 ID（trace_id）；不填则由网关自动生成（UUID v4）。网关按 context 贯穿日志、出站 HTTP 头、（仅当请求体 `TraceId` 为空时）兜底注入请求体 `TraceId` 属性，并在响应头回写本次实际使用的 trace_id |
+
+出站 SOAP 请求头（由 `pkg/client` 每次调用统一设置）：`Content-Type: text/xml;charset=UTF-8`、`SOAPAction: ""`（必须有、且为空字符串，B2BGateway 要求）、`Cache-Control: no-cache`、`Pragma: no-cache`、`Connection: keep-alive`，另加调用方的 `Authorization` 与 `X-Trace-Id`。`User-Agent` 由配置决定：设置了 `UAPI_USER_AGENT` 才发送，未设置则完全不带该头。
+
+每次 SOAP 调用都会输出 `SOAP operation completed successfully`（失败时为对应错误日志），携带 `trace_id`、`service`、`operation` 与 `duration`，统计 `CallWithObservability` 从请求开始到响应解析完成的完整耗时。
 
 示例：
 
