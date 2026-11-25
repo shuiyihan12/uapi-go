@@ -158,7 +158,7 @@ Optional UAPI parameters and defaults:
 | `UAPI_MAX_IDLE_CONNS` | no | `100` | max idle keep-alive connections kept warm across all upstream hosts |
 | `UAPI_MAX_IDLE_CONNS_PER_HOST` | no | `100` | max idle keep-alive connections per host (capped by `UAPI_MAX_IDLE_CONNS`) |
 | `UAPI_SKIP_TLS_VERIFY` | no | unset (verify certificates) | set to `1` only for private environments (self-signed certificates); keep unset in production |
-| `UAPI_USER_AGENT` | no | unset (header omitted) | outbound SOAP `User-Agent`, forwarded verbatim. `.env.example` ships `YourBrand-GDS-Engine/2.1.0` (format: `<company>-<service>/<version>`); no hardcoded default in code |
+| `UAPI_USER_AGENT` | no | `TINGLV-GOSDK-v0.55` | outbound SOAP `User-Agent`, forwarded verbatim. `.env.example` ships `TINGLV-GOSDK-v0.55` (format: `<company>-<service>/<version>`); SDK default is `TINGLV-GOSDK-v0.55` |
 
 > `Authorization` and `X-UAPI-Region` are not configured via environment variables; callers send them in every request header — see "Request headers" below.
 
