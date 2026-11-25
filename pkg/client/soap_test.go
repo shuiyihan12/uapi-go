@@ -137,7 +137,7 @@ func TestStandardOutboundSOAPHeaders(t *testing.T) {
 		BaseEndpoint: "https://example.com/uAPI",
 		ServiceName:  "HotelService",
 		Transport:    base,
-		UserAgent:    "TINGLV-GOSDK-v0.55",
+		UserAgent:    "TINGLV-GOSDK-v0.55.5",
 	})
 	if err != nil {
 		t.Fatalf("new SOAP client: %v", err)
@@ -148,7 +148,7 @@ func TestStandardOutboundSOAPHeaders(t *testing.T) {
 	for header, want := range map[string]string{
 		"Accept":        "text/xml",
 		"Content-Type":  "text/xml;charset=UTF-8",
-		"User-Agent":    "TINGLV-GOSDK-v0.55",
+		"User-Agent":    "TINGLV-GOSDK-v0.55.5",
 		"Cache-Control": "no-cache",
 		"Pragma":        "no-cache",
 		"Connection":    "keep-alive",

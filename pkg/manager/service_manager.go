@@ -123,7 +123,6 @@ func DefaultServiceConfig() ServiceConfig {
 		MaxIdleConnsPerHost: 100,
 		LogLevel:            "info",
 		IsDevelopment:       true,
-		UserAgent:           "TINGLV-GOSDK-v0.55",
 	}
 }
 

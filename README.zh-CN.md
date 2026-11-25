@@ -158,7 +158,7 @@ make dev
 | `UAPI_MAX_IDLE_CONNS` | 否 | `100` | 全部上游主机合计保温的空闲 keep-alive 连接上限 |
 | `UAPI_MAX_IDLE_CONNS_PER_HOST` | 否 | `100` | 单主机保温的空闲 keep-alive 连接上限（受 `UAPI_MAX_IDLE_CONNS` 封顶） |
 | `UAPI_SKIP_TLS_VERIFY` | 否 | 未设置（校验证书） | 仅私有环境（自签名证书）设为 `1`；生产务必保持未设置 |
-| `UAPI_USER_AGENT` | 否 | `TINGLV-GOSDK-v0.55` | 出站 SOAP 的 `User-Agent`，原样透传。`.env.example` 中给出 `TINGLV-GOSDK-v0.55`（格式：`<公司标识>-<服务名称>/<版本号>`），SDK 默认值为 `TINGLV-GOSDK-v0.55` |
+| `UAPI_USER_AGENT` | 否 | 未设置（不发送该头） | 出站 SOAP 的 `User-Agent`，原样透传。`.env.example` 中给出 `YourBrand-GDS-Engine/2.1.0`（格式：`<公司标识>-<服务名称>/<版本号>`），代码里无默认值 |
 
 > `Authorization` 与 `X-UAPI-Region` 不在环境变量里配置，而是由调用方在每个请求头携带，见下方「请求头」。
 
